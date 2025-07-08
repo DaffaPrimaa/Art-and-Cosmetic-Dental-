@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 const menuItems = [
   { label: "Dashboard", path: "/" },
   { label: "Data Pasien", path: "/pasien" },
+  { label: "Rekam Medis", path: "/rekam-medis" },
   { label: "Data Dokter", path: "/dokter" },
   { label: "Data Laporan", path: "/laporan" },
 ];

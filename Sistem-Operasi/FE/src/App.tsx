@@ -5,7 +5,10 @@ import DataPasien from "./pages/DataPasien";
 import DataDokter from "./pages/DataDokter";
 import DataLaporan from "./pages/DataLaporan";
 import EditPasien from "./pages/EditPasien";
+import EditDokter from "./pages/EditDokter";
 import TambahPasien from "./pages/TambahPasien";
+import TambahDokter from "./pages/TambahDokter";
+import RekamMedis from "./pages/RekamMedis";
 
 function App() {
   return (
@@ -16,7 +19,6 @@ function App() {
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             🏠 Klinik
           </h1>
-          <div className="text-gray-600">Admin</div>
         </div>
 
         <Routes>
@@ -25,7 +27,10 @@ function App() {
           <Route path="/dokter" element={<DataDokter />} />
           <Route path="/laporan" element={<DataLaporan />} />
           <Route path="/pasien/edit/:id" element={<EditPasien />} />
+          <Route path="/dokter/edit/:id" element={<EditDokter />} />
           <Route path="/pasien/tambah" element={<TambahPasien />} />
+          <Route path="/dokter/tambah" element={<TambahDokter />} />
+          <Route path="/rekam-medis" element={<RekamMedis />} />
         </Routes>
       </div>
     </div>

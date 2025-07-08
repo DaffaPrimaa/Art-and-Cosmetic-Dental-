@@ -1,34 +1,38 @@
 import React, { useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
-import { useNavigate } from "react-router-dom"; // ✅ Tambahkan ini
+import { useNavigate } from "react-router-dom";
 
-export interface Pasien {
+export interface Dokter {
+  nip: string;
   nama: string;
-  gender: string;
+  spesialis: string;
   email: string;
   telp: string;
   alamat: string;
 }
 
-interface TambahPasienProps {
-  onSubmit?: (data: Pasien) => void;
+interface TambahDokterProps {
+  onSubmit?: (data: Dokter) => void;
   onClose?: () => void;
 }
 
-const TambahPasien: React.FC<TambahPasienProps> = ({ onSubmit, onClose }) => {
-  const [form, setForm] = useState<Pasien>({
+const TambahDokter: React.FC<TambahDokterProps> = ({ onSubmit, onClose }) => {
+  const [form, setForm] = useState<Dokter>({
+    nip: "",
     nama: "",
-    gender: "Laki-laki",
+    spesialis: "Umum",
     email: "",
     telp: "",
     alamat: "",
   });
 
   const [showNotif, setShowNotif] = useState(false);
-  const navigate = useNavigate(); // ✅ Inisialisasi navigate
+  const navigate = useNavigate();
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -41,14 +45,15 @@ const TambahPasien: React.FC<TambahPasienProps> = ({ onSubmit, onClose }) => {
     setTimeout(() => {
       setShowNotif(false);
       onClose?.();
-      navigate("/pasien"); // ✅ Navigasi setelah submit
+      navigate("/dokter");
     }, 1500);
   };
 
   const handleReset = () => {
     setForm({
+      nip: "",
       nama: "",
-      gender: "Laki-laki",
+      spesialis: "Umum",
       email: "",
       telp: "",
       alamat: "",
@@ -58,10 +63,22 @@ const TambahPasien: React.FC<TambahPasienProps> = ({ onSubmit, onClose }) => {
   return (
     <div className="relative">
       <div className="bg-white p-6 rounded shadow-md mb-6 mt-6">
-        <h2 className="text-xl font-semibold mb-4">➕ Tambah Data Pasien</h2>
+        <h2 className="text-xl font-semibold mb-4">➕ Tambah Data Dokter</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block font-medium">Nama Pasien</label>
+            <label className="block font-medium">NIP</label>
+            <input
+              type="text"
+              name="nip"
+              value={form.nip}
+              onChange={handleChange}
+              className="border w-full px-3 py-2 rounded"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium">Nama Dokter</label>
             <input
               type="text"
               name="nama"
@@ -73,29 +90,21 @@ const TambahPasien: React.FC<TambahPasienProps> = ({ onSubmit, onClose }) => {
           </div>
 
           <div>
-            <label className="block font-medium">Jenis Kelamin</label>
-            <div className="flex space-x-4 mt-1">
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="Laki-laki"
-                  checked={form.gender === "Laki-laki"}
-                  onChange={handleChange}
-                />
-                <span className="ml-1">Laki-laki</span>
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="Perempuan"
-                  checked={form.gender === "Perempuan"}
-                  onChange={handleChange}
-                />
-                <span className="ml-1">Perempuan</span>
-              </label>
-            </div>
+            <label className="block font-medium">Spesialis</label>
+            <select
+              name="spesialis"
+              value={form.spesialis}
+              onChange={handleChange}
+              className="border w-full px-3 py-2 rounded"
+              required
+            >
+              <option value="Umum">Umum</option>
+              <option value="Mata">Mata</option>
+              <option value="Mulut">Mulut</option>
+              <option value="Gigi">Gigi</option>
+              <option value="Kulit">Kulit</option>
+              <option value="THT">THT</option>
+            </select>
           </div>
 
           <div>
@@ -151,15 +160,14 @@ const TambahPasien: React.FC<TambahPasienProps> = ({ onSubmit, onClose }) => {
         </form>
       </div>
 
-      {/* Notifikasi */}
       {showNotif && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-700 px-6 py-3 rounded-lg shadow-md flex items-center gap-2 z-50 animate-bounce">
           <FaCheckCircle className="text-green-600" />
-          <span>Data pasien telah ditambahkan</span>
+          <span>Data dokter telah ditambahkan</span>
         </div>
       )}
     </div>
   );
 };
 
-export default TambahPasien;
+export default TambahDokter;
