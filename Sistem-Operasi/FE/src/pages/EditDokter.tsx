@@ -2,7 +2,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export interface Dokter {
-  nip: string;
   nama: string;
   spesialis: string;
   email: string;
@@ -12,7 +11,6 @@ export interface Dokter {
 
 const dummyData: Dokter[] = [
   {
-    nip: "123456",
     nama: "dr. Daffa",
     spesialis: "Mata",
     email: "drdaffa@gmail.com",
@@ -20,7 +18,6 @@ const dummyData: Dokter[] = [
     alamat: "Bandung",
   },
   {
-    nip: "7891011",
     nama: "dr. Sari",
     spesialis: "Gigi",
     email: "drsari@gmail.com",
@@ -32,8 +29,8 @@ const dummyData: Dokter[] = [
 export default function EditDokter() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState<Dokter>({
-    nip: "",
     nama: "",
     spesialis: "",
     email: "",
@@ -92,17 +89,6 @@ export default function EditDokter() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block font-medium">NIP</label>
-          <input
-            name="nip"
-            value={formData.nip}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            required
-          />
-        </div>
-
         <div>
           <label className="block font-medium">Nama Dokter</label>
           <input

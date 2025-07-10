@@ -4,7 +4,7 @@ import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
 // Tipe data
 export type RekamMedis = {
-  tanggalPeriksa: string;
+  tanggalPeriksa: string; // format: YYYY-MM-DD
   pasien: string;
   keluhan: string;
   dokter: string;
@@ -17,52 +17,34 @@ export default function RekamMedis() {
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   useEffect(() => {
     const dummy: RekamMedis[] = [
       {
-        tanggalPeriksa: "10 Juni 2020",
-        pasien: "Pasien 1",
-        keluhan: "Gatal pada daerah tangan",
-        dokter: "Dokter 2",
-        diagnosa: "Penyakit kulit",
+        tanggalPeriksa: "2025-06-01",
+        pasien: "Rina Aulia",
+        keluhan: "Demam dan batuk",
+        dokter: "dr. Daffa",
+        diagnosa: "Flu ringan",
       },
       {
-        tanggalPeriksa: "10 Juni 2020",
-        pasien: "Pasien 2",
-        keluhan: "Nyeri di perut saat hamil",
-        dokter: "Dokter 4",
-        diagnosa: "Masalah pada perut",
+        tanggalPeriksa: "2025-07-03",
+        pasien: "Budi Santoso",
+        keluhan: "Sakit kepala",
+        dokter: "dr. Sari",
+        diagnosa: "Migrain",
       },
       {
-        tanggalPeriksa: "11 Juni 2020",
-        pasien: "Pasien 3",
-        keluhan: "Sakit pada paru-paru",
-        dokter: "Dokter 3",
-        diagnosa: "Penyakit paru-paru",
+        tanggalPeriksa: "2025-07-05",
+        pasien: "Toni Wijaya",
+        keluhan: "Mata merah",
+        dokter: "dr. Daffa",
+        diagnosa: "Konjungtivitis",
       },
-      {
-        tanggalPeriksa: "11 Juni 2020",
-        pasien: "Pasien 4",
-        keluhan: "Sakit pada janin",
-        dokter: "Dokter 4",
-        diagnosa: "Masalah kandungan",
-      },
-      {
-        tanggalPeriksa: "11 Juni 2020",
-        pasien: "Pasien 5",
-        keluhan: "Perih pada mata kanan",
-        dokter: "Dokter 1",
-        diagnosa: "Sakit pada kornea mata",
-      },
-      {
-        tanggalPeriksa: "12 Juni 2020",
-        pasien: "Pasien 6",
-        keluhan: "Demam tinggi",
-        dokter: "Dokter 1",
-        diagnosa: "Influenza",
-      },
+      
     ];
+
     setRekamMedis(dummy);
   }, []);
 
@@ -75,11 +57,17 @@ export default function RekamMedis() {
     }
   };
 
-  const filteredData = rekamMedis.filter((rm) =>
-    Object.values(rm).some((val) =>
+  const filteredData = rekamMedis.filter((rm) => {
+    const matchesSearch = Object.values(rm).some((val) =>
       val.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+    );
+
+    const matchesMonth = selectedMonth
+      ? rm.tanggalPeriksa.startsWith(selectedMonth)
+      : true;
+
+    return matchesSearch && matchesMonth;
+  });
 
   const indexOfLast = currentPage * entriesPerPage;
   const indexOfFirst = indexOfLast - entriesPerPage;
@@ -101,7 +89,7 @@ export default function RekamMedis() {
       </div>
 
       <div className="bg-white shadow-md rounded p-4">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
           <div className="flex items-center space-x-2">
             <span>Show</span>
             <select
@@ -127,11 +115,23 @@ export default function RekamMedis() {
             <input
               type="text"
               id="search"
-              className="border rounded px-3 py-1 focus:ring-blue-500 focus:border-blue-500"
+              className="border rounded px-3 py-1"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
+              }}
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <label className="font-semibold">Bulan:</label>
+            <input
+              type="month"
+              className="border px-2 py-1 rounded"
+              onChange={(e) => {
+                const [year, month] = e.target.value.split("-");
+                setSelectedMonth(`${year}-${month}`);
               }}
             />
           </div>
@@ -153,10 +153,7 @@ export default function RekamMedis() {
             <tbody>
               {currentEntries.length === 0 ? (
                 <tr>
-                  <td
-                    className="py-4 px-3 text-center text-gray-500"
-                    colSpan={7}
-                  >
+                  <td colSpan={7} className="py-4 text-center text-gray-500">
                     Tidak ada data rekam medis
                   </td>
                 </tr>
@@ -174,9 +171,9 @@ export default function RekamMedis() {
                     <td className="py-2 px-3">{rm.keluhan}</td>
                     <td className="py-2 px-3">{rm.dokter}</td>
                     <td className="py-2 px-3">{rm.diagnosa}</td>
-                    <td className="py-2 px-3 space-x-2 flex justify-center items-center">
+                    <td className="py-2 px-3 flex justify-center items-center space-x-2">
                       <button
-                        className="text-green-600 hover:text-green-700 transition-colors p-1 rounded-full bg-green-100 hover:bg-green-200"
+                        className="text-green-600 hover:text-green-700 p-1 rounded-full bg-green-100 hover:bg-green-200"
                         onClick={() =>
                           navigate(`/rekam-medis/detail/${indexOfFirst + i}`)
                         }
@@ -184,7 +181,7 @@ export default function RekamMedis() {
                         <FaEye />
                       </button>
                       <button
-                        className="text-yellow-500 hover:text-yellow-600 transition-colors p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
+                        className="text-yellow-500 hover:text-yellow-600 p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
                         onClick={() =>
                           navigate(`/rekam-medis/edit/${indexOfFirst + i}`)
                         }
@@ -192,7 +189,7 @@ export default function RekamMedis() {
                         <FaEdit />
                       </button>
                       <button
-                        className="text-red-500 hover:text-red-600 transition-colors p-1 rounded-full bg-red-100 hover:bg-red-200"
+                        className="text-red-500 hover:text-red-600 p-1 rounded-full bg-red-100 hover:bg-red-200"
                         onClick={() => handleDelete(indexOfFirst + i)}
                       >
                         <FaTrash />
@@ -215,7 +212,7 @@ export default function RekamMedis() {
             <button
               onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1 border rounded text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
             >
               Previous
             </button>
@@ -235,7 +232,7 @@ export default function RekamMedis() {
             <button
               onClick={() => paginate(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
             >
               Next
             </button>
