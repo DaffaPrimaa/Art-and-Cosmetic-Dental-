@@ -5,6 +5,7 @@ const menuItems = [
   { label: "Data Pasien", path: "/pasien" },
   { label: "Rekam Medis", path: "/rekam-medis" },
   { label: "Data Dokter", path: "/dokter" },
+  { label: "Data Alat", path: "/alat" },
   { label: "Data Laporan", path: "/laporan" },
 ];
 

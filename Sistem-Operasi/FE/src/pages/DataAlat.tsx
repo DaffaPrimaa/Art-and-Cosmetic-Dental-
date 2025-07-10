@@ -2,73 +2,79 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-export interface Dokter {
+export interface Alat {
   nama: string;
-  spesialis: string;
-  email: string;
-  telp: string;
-  alamat: string;
+  jumlah: number;
+  harga: number;
+  keterangan: string;
 }
 
-export default function DataDokter() {
+export default function DataAlat() {
   const navigate = useNavigate();
-  const [dokter, setDokter] = useState<Dokter[]>([]);
+  const [alat, setAlat] = useState<Alat[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const dummy: Dokter[] = [
+    const dummy: Alat[] = [
       {
-        nama: "dr. Daffa",
-        spesialis: "Mata",
-        email: "drdaffa@gmail.com",
-        telp: "081234567890",
-        alamat: "Bandung",
+        nama: "Obat Flu",
+        jumlah: 10,
+        harga: 15000,
+        keterangan: "Untuk meredakan flu",
       },
       {
-        nama: "dr. Sari",
-        spesialis: "Gigi",
-        email: "drsari@gmail.com",
-        telp: "089876543210",
-        alamat: "Jakarta",
+        nama: "Paracetamol",
+        jumlah: 20,
+        harga: 12000,
+        keterangan: "Pereda demam",
+      },
+      {
+        nama: "Vitamin C",
+        jumlah: 50,
+        harga: 10000,
+        keterangan: "Meningkatkan daya tahan tubuh",
+      },
+      {
+        nama: "Salep Kulit",
+        jumlah: 15,
+        harga: 20000,
+        keterangan: "Untuk gatal-gatal",
       },
     ];
-    setDokter(dummy);
+    setAlat(dummy);
   }, []);
 
   const handleDelete = (index: number) => {
     const yakin = window.confirm("Yakin ingin menghapus data ini?");
     if (yakin) {
-      const updated = [...dokter];
+      const updated = [...alat];
       updated.splice(index, 1);
-      setDokter(updated);
+      setAlat(updated);
     }
   };
 
-  const filteredDokter = dokter.filter((d) =>
-    Object.values(d).some((value) =>
+  const filteredAlat = alat.filter((a) =>
+    Object.values(a).some((value) =>
       String(value).toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredDokter.slice(
-    indexOfFirstEntry,
-    indexOfLastEntry
-  );
-  const totalPages = Math.ceil(filteredDokter.length / entriesPerPage);
+  const currentEntries = filteredAlat.slice(indexOfFirstEntry, indexOfLastEntry);
+  const totalPages = Math.ceil(filteredAlat.length / entriesPerPage);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="mt-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">🧑‍⚕️ Data Dokter</h2>
+        <h2 className="text-xl font-bold">💊 Data Alat / Obat</h2>
         <button
-          onClick={() => navigate("/dokter/tambah")}
-          className="bg-[#3EC6D3] text-white px-3 py-1 rounded hover:bg-[#2BB6C0] transition-colors flex items-center gap-1"
+          onClick={() => navigate("/alat/tambah")}
+          className="bg-[#3EC6D3] text-white px-3 py-1 rounded hover:bg-[#2BB6C0] transition-colors"
         >
           + Tambah Data
         </button>
@@ -101,7 +107,7 @@ export default function DataDokter() {
             <input
               type="text"
               id="search"
-              className="border rounded px-3 py-1"
+              className="border rounded px-3 py-1 focus:ring-blue-500 focus:border-blue-500"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -115,54 +121,41 @@ export default function DataDokter() {
           <table className="min-w-full text-sm text-left border-collapse">
             <thead className="bg-[#0B2C5F] text-white">
               <tr>
-                <th className="py-2 px-3 font-semibold text-center rounded-tl-md">
-                  No
-                </th>
-                <th className="py-2 px-3 font-semibold">Nama Dokter</th>
-                <th className="py-2 px-3 font-semibold">Spesialis</th>
-                <th className="py-2 px-3 font-semibold">Email</th>
-                <th className="py-2 px-3 font-semibold">No Telp</th>
-                <th className="py-2 px-3 font-semibold">Alamat</th>
-                <th className="py-2 px-3 font-semibold text-center rounded-tr-md">
-                  Aksi
-                </th>
+                <th className="py-2 px-3 font-semibold text-center rounded-tl-md">No</th>
+                <th className="py-2 px-3 font-semibold">Nama Obat</th>
+                <th className="py-2 px-3 font-semibold">Jumlah</th>
+                <th className="py-2 px-3 font-semibold">Harga</th>
+                <th className="py-2 px-3 font-semibold">Keterangan</th>
+                <th className="py-2 px-3 font-semibold text-center rounded-tr-md">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {currentEntries.length === 0 ? (
                 <tr>
-                  <td
-                    className="py-4 px-3 text-center text-gray-500"
-                    colSpan={7}
-                  >
-                    Tidak ada data dokter
+                  <td className="py-4 px-3 text-center text-gray-500" colSpan={6}>
+                    Tidak ada data alat / obat
                   </td>
                 </tr>
               ) : (
-                currentEntries.map((d, i) => (
+                currentEntries.map((a, i) => (
                   <tr
                     key={indexOfFirstEntry + i}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="py-2 px-3 text-center">
-                      {indexOfFirstEntry + i + 1}.
-                    </td>
-                    <td className="py-2 px-3">{d.nama}</td>
-                    <td className="py-2 px-3">{d.spesialis}</td>
-                    <td className="py-2 px-3">{d.email}</td>
-                    <td className="py-2 px-3">{d.telp}</td>
-                    <td className="py-2 px-3">{d.alamat}</td>
-                    <td className="py-2 px-3 space-x-2 flex justify-center items-center">
+                    <td className="py-2 px-3 text-center">{indexOfFirstEntry + i + 1}.</td>
+                    <td className="py-2 px-3">{a.nama}</td>
+                    <td className="py-2 px-3">{a.jumlah}</td>
+                    <td className="py-2 px-3">Rp {a.harga.toLocaleString("id-ID")},00</td>
+                    <td className="py-2 px-3">{a.keterangan}</td>
+                    <td className="py-2 px-3 flex justify-center items-center space-x-2">
                       <button
-                        className="text-yellow-500 hover:text-yellow-600 p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
-                        onClick={() =>
-                          navigate(`/dokter/edit/${indexOfFirstEntry + i}`)
-                        }
+                        className="text-yellow-500 hover:text-yellow-600 transition-colors p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
+                        onClick={() => navigate(`/alat/edit/${indexOfFirstEntry + i}`)}
                       >
                         <FaEdit />
                       </button>
                       <button
-                        className="text-red-500 hover:text-red-600 p-1 rounded-full bg-red-100 hover:bg-red-200"
+                        className="text-red-500 hover:text-red-600 transition-colors p-1 rounded-full bg-red-100 hover:bg-red-200"
                         onClick={() => handleDelete(indexOfFirstEntry + i)}
                       >
                         <FaTrash />
@@ -178,8 +171,7 @@ export default function DataDokter() {
         <div className="flex justify-between items-center mt-4">
           <div className="text-gray-600">
             Showing {indexOfFirstEntry + 1} to{" "}
-            {Math.min(indexOfLastEntry, filteredDokter.length)} of{" "}
-            {filteredDokter.length} entries
+            {Math.min(indexOfLastEntry, filteredAlat.length)} of {filteredAlat.length} entries
           </div>
           <nav className="flex space-x-1">
             <button
