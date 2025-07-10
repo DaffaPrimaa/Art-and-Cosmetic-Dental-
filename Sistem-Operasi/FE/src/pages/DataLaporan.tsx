@@ -28,6 +28,12 @@ const dummyLaporan: Laporan[] = [
     keluhan: "Nyeri di bagian perut",
   },
   {
+    tanggal: "2025-06-05",
+    dokter: "dr. Daffa",
+    pasien: "Budi Santoso",
+    keluhan: "Nyeri kaki",
+  },
+  {
     tanggal: "2025-07-07",
     dokter: "dr. Sari",
     pasien: "Rina Kusuma",
