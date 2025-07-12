@@ -21,6 +21,7 @@ export default function TambahDokter() {
   });
 
   const [showNotif, setShowNotif] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -29,15 +30,31 @@ export default function TambahDokter() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowNotif(true);
+    setError("");
 
-    // Simulasi penambahan data
-    setTimeout(() => {
-      setShowNotif(false);
-      navigate("/dokter");
-    }, 1000);
+    try {
+      const res = await fetch("http://localhost:8000/dokter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal menambahkan dokter");
+      }
+
+      setShowNotif(true);
+      setTimeout(() => {
+        navigate("/dokter");
+      }, 1000);
+    } catch (err) {
+      setError("Terjadi kesalahan saat menyimpan data.");
+      console.error(err);
+    }
   };
 
   const handleReset = () => {
@@ -48,6 +65,7 @@ export default function TambahDokter() {
       telp: "",
       alamat: "",
     });
+    setError("");
   };
 
   return (
@@ -55,21 +73,14 @@ export default function TambahDokter() {
       <h2 className="text-2xl font-semibold mb-4">➕ Tambah Data Dokter</h2>
 
       {showNotif && (
-        <div className="flex items-center gap-2 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded mb-4 shadow-md">
-          <svg
-            className="w-5 h-5 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <span>Data dokter telah ditambahkan</span>
+        <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded mb-4">
+          Data dokter berhasil ditambahkan.
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-800 px-4 py-2 rounded mb-4">
+          {error}
         </div>
       )}
 
