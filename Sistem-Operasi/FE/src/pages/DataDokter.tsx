@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 export interface Dokter {
   id: number;
@@ -32,16 +33,35 @@ export default function DataDokter() {
   };
 
   const handleDelete = async (id: number) => {
-    const konfirmasi = confirm("Yakin ingin menghapus data ini?");
-    if (!konfirmasi) return;
+    const result = await Swal.fire({
+      title: "Yakin ingin menghapus?",
+      text: "Data ini akan dihapus secara permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await fetch(`http://localhost:8000/dokter/${id}`, {
         method: "DELETE",
       });
-      setDokter(dokter.filter((d) => d.id !== id));
+      setDokter((prev) => prev.filter((d) => d.id !== id));
+
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Data berhasil dihapus.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
-      console.error("Gagal fetch data dokter:", err);
+      console.error("Gagal hapus dokter:", err);
+      Swal.fire("Gagal", "Terjadi kesalahan saat menghapus data.", "error");
     }
   };
 
@@ -112,16 +132,16 @@ export default function DataDokter() {
           <p className="text-center py-4">Loading...</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm border-collapse">
+            <table className="min-w-full text-sm table-auto border-collapse">
               <thead className="bg-[#0B2C5F] text-white">
                 <tr>
-                  <th className="py-2 px-3">No</th>
-                  <th className="py-2 px-3">Nama</th>
-                  <th className="py-2 px-3">Spesialis</th>
-                  <th className="py-2 px-3">Email</th>
-                  <th className="py-2 px-3">Telp</th>
-                  <th className="py-2 px-3">Alamat</th>
-                  <th className="py-2 px-3 text-center">Aksi</th>
+                  <th className="py-2 px-3 text-center w-10">No</th>
+                  <th className="py-2 px-3 text-left">Nama</th>
+                  <th className="py-2 px-3 text-left">Spesialis</th>
+                  <th className="py-2 px-3 text-left">Email</th>
+                  <th className="py-2 px-3 text-left">Telp</th>
+                  <th className="py-2 px-3 text-left">Alamat</th>
+                  <th className="py-2 px-3 text-center w-28">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -140,24 +160,28 @@ export default function DataDokter() {
                       <td className="py-2 px-3 text-center">
                         {indexOfFirst + i + 1}.
                       </td>
-                      <td className="py-2 px-3">{d.nama}</td>
-                      <td className="py-2 px-3">{d.spesialis}</td>
+                      <td className="py-2 px-3 whitespace-nowrap">{d.nama}</td>
+                      <td className="py-2 px-3 whitespace-nowrap">
+                        {d.spesialis}
+                      </td>
                       <td className="py-2 px-3">{d.email}</td>
-                      <td className="py-2 px-3">{d.telp}</td>
+                      <td className="py-2 px-3 whitespace-nowrap">{d.telp}</td>
                       <td className="py-2 px-3">{d.alamat}</td>
-                      <td className="py-2 px-3 flex justify-center gap-2">
-                        <button
-                          onClick={() => navigate(`/dokter/edit/${d.id}`)}
-                          className="bg-yellow-100 text-yellow-600 p-1 rounded hover:bg-yellow-200"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(d.id)}
-                          className="bg-red-100 text-red-600 p-1 rounded hover:bg-red-200"
-                        >
-                          <FaTrash />
-                        </button>
+                      <td className="py-2 px-3 text-center">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => navigate(`/dokter/edit/${d.id}`)}
+                            className="bg-yellow-100 text-yellow-600 p-1 rounded hover:bg-yellow-200"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(d.id)}
+                            className="bg-red-100 text-red-600 p-1 rounded hover:bg-red-200"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

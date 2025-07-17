@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 export interface Pasien {
   id?: number;
@@ -32,16 +33,35 @@ export default function DataPasien() {
   };
 
   const handleDelete = async (id: number) => {
-    const yakin = confirm("Yakin ingin menghapus data ini?");
-    if (!yakin) return;
+    const result = await Swal.fire({
+      title: "Yakin ingin menghapus?",
+      text: "Data ini akan dihapus secara permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await fetch(`http://localhost:8000/pasien/${id}`, {
         method: "DELETE",
       });
       setPasien((prev) => prev.filter((p) => p.id !== id));
+
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Data berhasil dihapus.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error("Gagal hapus pasien:", err);
+      Swal.fire("Gagal", "Terjadi kesalahan saat menghapus data.", "error");
     }
   };
 
@@ -73,7 +93,8 @@ export default function DataPasien() {
       </div>
 
       <div className="bg-white shadow-md rounded p-4">
-        <div className="flex justify-between items-center mb-4">
+        {/* Filter & Entries */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
           <div className="flex items-center gap-2">
             <span>Show</span>
             <select
@@ -108,6 +129,7 @@ export default function DataPasien() {
           </div>
         </div>
 
+        {/* Tabel */}
         {loading ? (
           <p className="text-center py-4">Loading...</p>
         ) : (
@@ -115,18 +137,18 @@ export default function DataPasien() {
             <table className="min-w-full text-sm border-collapse">
               <thead className="bg-[#0B2C5F] text-white">
                 <tr>
-                  <th className="py-2 px-3">No</th>
-                  <th className="py-2 px-3">Nama</th>
-                  <th className="py-2 px-3">Email</th>
-                  <th className="py-2 px-3">Telp</th>
-                  <th className="py-2 px-3">Alamat</th>
-                  <th className="py-2 px-3 text-center">Aksi</th>
+                  <th className="py-2 px-4 text-left">No</th>
+                  <th className="py-2 px-4 text-left">Nama</th>
+                  <th className="py-2 px-4 text-left">Email</th>
+                  <th className="py-2 px-4 text-left">Telp</th>
+                  <th className="py-2 px-4 text-left">Alamat</th>
+                  <th className="py-2 px-4 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {currentEntries.length === 0 ? (
                   <tr>
-                    <td className="text-center py-4" colSpan={6}>
+                    <td colSpan={6} className="text-center py-4 text-gray-500">
                       Tidak ada data pasien
                     </td>
                   </tr>
@@ -136,24 +158,26 @@ export default function DataPasien() {
                       key={p.id}
                       className="border-b border-gray-200 hover:bg-gray-50"
                     >
-                      <td className="py-2 px-3 text-center">{indexOfFirst + i + 1}.</td>
-                      <td className="py-2 px-3">{p.nama}</td>
-                      <td className="py-2 px-3">{p.email}</td>
-                      <td className="py-2 px-3">{p.telp}</td>
-                      <td className="py-2 px-3">{p.alamat}</td>
-                      <td className="py-2 px-3 flex justify-center gap-2">
-                        <button
-                          onClick={() => navigate(`/pasien/edit/${p.id}`)}
-                          className="bg-yellow-100 text-yellow-600 p-1 rounded hover:bg-yellow-200"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(p.id!)}
-                          className="bg-red-100 text-red-600 p-1 rounded hover:bg-red-200"
-                        >
-                          <FaTrash />
-                        </button>
+                      <td className="py-2 px-4">{indexOfFirst + i + 1}.</td>
+                      <td className="py-2 px-4">{p.nama}</td>
+                      <td className="py-2 px-4">{p.email}</td>
+                      <td className="py-2 px-4">{p.telp}</td>
+                      <td className="py-2 px-4">{p.alamat}</td>
+                      <td className="py-2 px-4">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => navigate(`/pasien/edit/${p.id}`)}
+                            className="bg-yellow-100 text-yellow-600 p-1 rounded hover:bg-yellow-200"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(p.id!)}
+                            className="bg-red-100 text-red-600 p-1 rounded hover:bg-red-200"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -163,11 +187,15 @@ export default function DataPasien() {
           </div>
         )}
 
-        <div className="flex justify-between mt-4">
-          <div className="text-gray-600">
-            Showing {indexOfFirst + 1} to {Math.min(indexOfLast, filteredPasien.length)} of {filteredPasien.length} entries
+        {/* Pagination */}
+        <div className="flex flex-col md:flex-row justify-between items-center mt-4 gap-2">
+          <div className="text-sm text-gray-600">
+            Showing {indexOfFirst + 1} to{" "}
+            {Math.min(indexOfLast, filteredPasien.length)} of{" "}
+            {filteredPasien.length} entries
           </div>
-          <div className="flex gap-1">
+
+          <div className="flex gap-1 flex-wrap">
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 export interface Alat {
   id: number;
@@ -33,20 +34,38 @@ export default function DataAlat() {
 
   // Hapus dari backend
   const handleDelete = async (id: number) => {
-    const yakin = window.confirm("Yakin ingin menghapus data ini?");
-    if (!yakin) return;
+    const result = await Swal.fire({
+      title: "Yakin ingin menghapus?",
+      text: "Data ini akan dihapus secara permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`http://localhost:8000/alat/${id}`, {
         method: "DELETE",
       });
+
       if (!res.ok) throw new Error("Gagal menghapus");
 
-      // Refresh state setelah hapus
       setAlat((prev) => prev.filter((item) => item.id !== id));
+
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Data alat/obat berhasil dihapus.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error("Gagal hapus:", err);
-      alert("Terjadi kesalahan saat menghapus data.");
+      Swal.fire("Gagal", "Terjadi kesalahan saat menghapus data.", "error");
     }
   };
 
@@ -58,7 +77,10 @@ export default function DataAlat() {
 
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredAlat.slice(indexOfFirstEntry, indexOfLastEntry);
+  const currentEntries = filteredAlat.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
   const totalPages = Math.ceil(filteredAlat.length / entriesPerPage);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
@@ -116,18 +138,25 @@ export default function DataAlat() {
           <table className="min-w-full text-sm text-left border-collapse">
             <thead className="bg-[#0B2C5F] text-white">
               <tr>
-                <th className="py-2 px-3 font-semibold text-center rounded-tl-md">No</th>
+                <th className="py-2 px-3 font-semibold text-center rounded-tl-md">
+                  No
+                </th>
                 <th className="py-2 px-3 font-semibold">Nama Obat</th>
                 <th className="py-2 px-3 font-semibold">Jumlah</th>
                 <th className="py-2 px-3 font-semibold">Harga</th>
                 <th className="py-2 px-3 font-semibold">Keterangan</th>
-                <th className="py-2 px-3 font-semibold text-center rounded-tr-md">Aksi</th>
+                <th className="py-2 px-3 font-semibold text-center rounded-tr-md">
+                  Aksi
+                </th>
               </tr>
             </thead>
             <tbody>
               {currentEntries.length === 0 ? (
                 <tr>
-                  <td className="py-4 px-3 text-center text-gray-500" colSpan={6}>
+                  <td
+                    className="py-4 px-3 text-center text-gray-500"
+                    colSpan={6}
+                  >
                     Tidak ada data alat / obat
                   </td>
                 </tr>
@@ -142,7 +171,9 @@ export default function DataAlat() {
                     </td>
                     <td className="py-2 px-3">{a.nama}</td>
                     <td className="py-2 px-3">{a.jumlah}</td>
-                    <td className="py-2 px-3">Rp {a.harga.toLocaleString("id-ID")},00</td>
+                    <td className="py-2 px-3">
+                      Rp {a.harga.toLocaleString("id-ID")},00
+                    </td>
                     <td className="py-2 px-3">{a.keterangan}</td>
                     <td className="py-2 px-3 flex justify-center items-center space-x-2">
                       <button
@@ -168,7 +199,8 @@ export default function DataAlat() {
         <div className="flex justify-between items-center mt-4">
           <div className="text-gray-600">
             Showing {indexOfFirstEntry + 1} to{" "}
-            {Math.min(indexOfLastEntry, filteredAlat.length)} of {filteredAlat.length} entries
+            {Math.min(indexOfLastEntry, filteredAlat.length)} of{" "}
+            {filteredAlat.length} entries
           </div>
           <nav className="flex space-x-1">
             <button

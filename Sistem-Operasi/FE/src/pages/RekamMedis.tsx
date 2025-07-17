@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 export type RekamMedis = {
   id: number;
@@ -36,8 +37,18 @@ export default function RekamMedis() {
   };
 
   const handleDelete = async (id: number) => {
-    const yakin = window.confirm("Yakin ingin menghapus data ini?");
-    if (!yakin) return;
+    const result = await Swal.fire({
+      title: "Yakin ingin menghapus?",
+      text: "Data ini akan dihapus secara permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`http://localhost:8000/rekam-medis/${id}`, {
@@ -46,11 +57,18 @@ export default function RekamMedis() {
 
       if (!res.ok) throw new Error("Gagal menghapus dari server");
 
-      alert("Data berhasil dihapus");
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Data rekam medis berhasil dihapus.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
       fetchRekamMedis(); // Refresh data
     } catch (err) {
       console.error(err);
-      alert("Gagal menghapus data dari server.");
+      Swal.fire("Gagal", "Terjadi kesalahan saat menghapus data.", "error");
     }
   };
 
@@ -104,7 +122,9 @@ export default function RekamMedis() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <label htmlFor="search" className="font-semibold">Search:</label>
+            <label htmlFor="search" className="font-semibold">
+              Search:
+            </label>
             <input
               type="text"
               id="search"
@@ -122,9 +142,10 @@ export default function RekamMedis() {
             <input
               type="month"
               className="border px-2 py-1 rounded"
+              value={selectedMonth}
               onChange={(e) => {
-                const [year, month] = e.target.value.split("-");
-                setSelectedMonth(`${year}-${month}`);
+                setSelectedMonth(e.target.value);
+                setCurrentPage(1);
               }}
             />
           </div>

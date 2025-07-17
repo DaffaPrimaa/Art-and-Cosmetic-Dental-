@@ -7,14 +7,13 @@ interface Laporan {
   keluhan: string;
 }
 
-const allDokter = ["Semua", "dr. Daffa", "dr. Sari"];
-
 const DataLaporan = () => {
   const [data, setData] = useState<Laporan[]>([]);
+  const [dokterList, setDokterList] = useState<string[]>(["Semua"]);
   const [selectedDokter, setSelectedDokter] = useState("Semua");
   const [selectedMonth, setSelectedMonth] = useState("");
 
-  // ✅ Ambil data dari BE saat komponen dimuat
+  // Ambil data laporan
   useEffect(() => {
     fetch("http://localhost:8000/rekam-medis/")
       .then((res) => res.json())
@@ -22,15 +21,23 @@ const DataLaporan = () => {
       .catch((err) => console.error("Gagal fetch data:", err));
   }, []);
 
-  // ✅ Filter berdasarkan bulan dan dokter
+  // Ambil daftar dokter
+  useEffect(() => {
+    fetch("http://localhost:8000/dokter/")
+      .then((res) => res.json())
+      .then((res) => {
+        const namaDokter = res.map((d: { nama: string }) => d.nama);
+        setDokterList(["Semua", ...namaDokter]);
+      })
+      .catch((err) => console.error("Gagal fetch dokter:", err));
+  }, []);
+
   const filteredData = data.filter((laporan) => {
     const monthMatch = selectedMonth
       ? laporan.tanggal.startsWith(selectedMonth)
       : true;
-
     const dokterMatch =
       selectedDokter === "Semua" || laporan.dokter === selectedDokter;
-
     return monthMatch && dokterMatch;
   });
 
@@ -47,7 +54,7 @@ const DataLaporan = () => {
             onChange={(e) => setSelectedDokter(e.target.value)}
             className="border p-2 rounded"
           >
-            {allDokter.map((d, i) => (
+            {dokterList.map((d, i) => (
               <option key={i} value={d}>
                 {d}
               </option>
@@ -60,10 +67,8 @@ const DataLaporan = () => {
           <input
             type="month"
             className="border p-2 rounded"
-            onChange={(e) => {
-              const [year, month] = e.target.value.split("-");
-              setSelectedMonth(`${year}-${month}`);
-            }}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
           />
         </div>
       </div>
