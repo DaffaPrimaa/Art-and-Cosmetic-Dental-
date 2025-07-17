@@ -1,66 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Laporan {
-  tanggal: string; // format: YYYY-MM-DD
+  tanggal: string;
   dokter: string;
   pasien: string;
   keluhan: string;
 }
 
-// ✅ DATA BARU UNTUK BULAN JULI 2025
-const dummyLaporan: Laporan[] = [
-  {
-    tanggal: "2025-07-01",
-    dokter: "dr. Daffa",
-    pasien: "Siti Aminah",
-    keluhan: "Demam dan batuk",
-  },
-  {
-    tanggal: "2025-07-03",
-    dokter: "dr. Sari",
-    pasien: "Ahmad Yani",
-    keluhan: "Sakit kepala dan pusing",
-  },
-  {
-    tanggal: "2025-07-05",
-    dokter: "dr. Daffa",
-    pasien: "Budi Santoso",
-    keluhan: "Nyeri di bagian perut",
-  },
-  {
-    tanggal: "2025-06-05",
-    dokter: "dr. Daffa",
-    pasien: "Budi Santoso",
-    keluhan: "Nyeri kaki",
-  },
-  {
-    tanggal: "2025-07-07",
-    dokter: "dr. Sari",
-    pasien: "Rina Kusuma",
-    keluhan: "Sakit gigi belakang",
-  },
-  {
-    tanggal: "2025-07-08",
-    dokter: "dr. Daffa",
-    pasien: "Toni Wijaya",
-    keluhan: "Mata merah dan gatal",
-  },
-];
-
-const allDokter = ["Semua", "dr. Daffa", "dr. Sari"];
-
 const DataLaporan = () => {
+  const [data, setData] = useState<Laporan[]>([]);
+  const [dokterList, setDokterList] = useState<string[]>(["Semua"]);
   const [selectedDokter, setSelectedDokter] = useState("Semua");
   const [selectedMonth, setSelectedMonth] = useState("");
 
-  const filteredData = dummyLaporan.filter((laporan) => {
+  // Ambil data laporan
+  useEffect(() => {
+    fetch("http://localhost:8000/rekam-medis/")
+      .then((res) => res.json())
+      .then((res) => setData(res))
+      .catch((err) => console.error("Gagal fetch data:", err));
+  }, []);
+
+  // Ambil daftar dokter
+  useEffect(() => {
+    fetch("http://localhost:8000/dokter/")
+      .then((res) => res.json())
+      .then((res) => {
+        const namaDokter = res.map((d: { nama: string }) => d.nama);
+        setDokterList(["Semua", ...namaDokter]);
+      })
+      .catch((err) => console.error("Gagal fetch dokter:", err));
+  }, []);
+
+  const filteredData = data.filter((laporan) => {
     const monthMatch = selectedMonth
       ? laporan.tanggal.startsWith(selectedMonth)
       : true;
-
     const dokterMatch =
       selectedDokter === "Semua" || laporan.dokter === selectedDokter;
-
     return monthMatch && dokterMatch;
   });
 
@@ -77,7 +54,7 @@ const DataLaporan = () => {
             onChange={(e) => setSelectedDokter(e.target.value)}
             className="border p-2 rounded"
           >
-            {allDokter.map((d, i) => (
+            {dokterList.map((d, i) => (
               <option key={i} value={d}>
                 {d}
               </option>
@@ -90,10 +67,8 @@ const DataLaporan = () => {
           <input
             type="month"
             className="border p-2 rounded"
-            onChange={(e) => {
-              const [year, month] = e.target.value.split("-");
-              setSelectedMonth(`${year}-${month}`);
-            }}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
           />
         </div>
       </div>

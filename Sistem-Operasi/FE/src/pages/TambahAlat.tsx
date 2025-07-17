@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 export interface Alat {
   nama: string;
-  jumlah: number;
-  harga: number;
+  jumlah: string;
+  harga: string;
   keterangan: string;
 }
 
@@ -13,31 +13,74 @@ export default function TambahAlat() {
 
   const [formData, setFormData] = useState<Alat>({
     nama: "",
-    jumlah: 0,
-    harga: 0,
+    jumlah: "",
+    harga: "",
     keterangan: "",
   });
 
   const [showNotif, setShowNotif] = useState(false);
 
+  const formatRupiah = (value: string) => {
+    const angka = value.replace(/[^\d]/g, "");
+    if (!angka) return "";
+    return parseInt(angka).toLocaleString("id-ID");
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "jumlah" || name === "harga" ? Number(value) : value,
-    }));
+
+    if (name === "harga") {
+      const onlyNumbers = value.replace(/[^\d]/g, "");
+      setFormData((prev) => ({
+        ...prev,
+        harga: formatRupiah(onlyNumbers),
+      }));
+    } else if (name === "jumlah") {
+      const onlyNumbers = value.replace(/[^\d]/g, "");
+      setFormData((prev) => ({
+        ...prev,
+        jumlah: onlyNumbers,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowNotif(true);
 
-    setTimeout(() => {
-      setShowNotif(false);
-      navigate("/alat");
-    }, 1000);
+    const dataToSend = {
+      ...formData,
+      jumlah: parseInt(formData.jumlah || "0"),
+      harga: parseInt(formData.harga.replace(/\./g, "") || "0"),
+    };
+
+    try {
+      const response = await fetch("http://localhost:8000/alat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToSend),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menambahkan data alat");
+      }
+
+      setShowNotif(true);
+      setTimeout(() => {
+        setShowNotif(false);
+        navigate("/alat");
+      }, 1000);
+    } catch (err) {
+      alert("Terjadi kesalahan saat menyimpan: " + err);
+    }
   };
 
   return (
@@ -79,12 +122,11 @@ export default function TambahAlat() {
           <label className="block font-medium">Jumlah</label>
           <input
             name="jumlah"
-            type="number"
+            inputMode="numeric"
             value={formData.jumlah}
             onChange={handleChange}
             className="w-full border p-2 rounded"
             required
-            min={0}
           />
         </div>
 
@@ -92,12 +134,11 @@ export default function TambahAlat() {
           <label className="block font-medium">Harga</label>
           <input
             name="harga"
-            type="number"
+            inputMode="numeric"
             value={formData.harga}
             onChange={handleChange}
             className="w-full border p-2 rounded"
             required
-            min={0}
           />
         </div>
 

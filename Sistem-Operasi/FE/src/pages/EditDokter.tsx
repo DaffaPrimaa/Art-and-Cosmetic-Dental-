@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export interface Dokter {
+  id?: number;
   nama: string;
   spesialis: string;
   email: string;
@@ -9,25 +10,8 @@ export interface Dokter {
   alamat: string;
 }
 
-const dummyData: Dokter[] = [
-  {
-    nama: "dr. Daffa",
-    spesialis: "Mata",
-    email: "drdaffa@gmail.com",
-    telp: "081234567890",
-    alamat: "Bandung",
-  },
-  {
-    nama: "dr. Sari",
-    spesialis: "Gigi",
-    email: "drsari@gmail.com",
-    telp: "089876543210",
-    alamat: "Jakarta",
-  },
-];
-
 export default function EditDokter() {
-  const { id } = useParams();
+  const { id } = useParams(); // dari /dokter/edit/:id
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<Dokter>({
@@ -38,13 +22,26 @@ export default function EditDokter() {
     alamat: "",
   });
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showNotif, setShowNotif] = useState(false);
 
   useEffect(() => {
     if (id) {
-      const index = parseInt(id);
-      const selected = dummyData[index];
-      if (selected) setFormData(selected);
+      fetch(`http://localhost:8000/dokter/${id}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Gagal mengambil data dokter");
+          return res.json();
+        })
+        .then((data: Dokter) => {
+          setFormData(data);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error(err);
+          setError("Dokter tidak ditemukan.");
+          setLoading(false);
+        });
     }
   }, [id]);
 
@@ -55,36 +52,48 @@ export default function EditDokter() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowNotif(true);
+    setError("");
 
-    setTimeout(() => {
-      setShowNotif(false);
-      navigate("/dokter");
-    }, 1000);
+    try {
+      const res = await fetch(`http://localhost:8000/dokter/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal memperbarui dokter");
+      }
+
+      setShowNotif(true);
+      setTimeout(() => {
+        navigate("/dokter");
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+      setError("Terjadi kesalahan saat menyimpan data.");
+    }
   };
+
+  if (loading) return <div className="p-4">Loading...</div>;
 
   return (
     <div className="bg-white p-6 rounded shadow-md mb-6 mt-6">
       <h2 className="text-2xl font-semibold mb-4">📝 Edit Data Dokter</h2>
 
       {showNotif && (
-        <div className="flex items-center gap-2 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded mb-4 shadow-md">
-          <svg
-            className="w-5 h-5 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <span>Data dokter telah diperbarui</span>
+        <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded mb-4">
+          Data dokter berhasil diperbarui.
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-800 px-4 py-2 rounded mb-4">
+          {error}
         </div>
       )}
 

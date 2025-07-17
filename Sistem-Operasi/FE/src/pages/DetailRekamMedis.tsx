@@ -1,20 +1,39 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+interface RekamMedis {
+  pasien: string;
+  keluhan: string;
+  tanggal: string;
+  dokter: string;
+  diagnosa: string;
+}
 
 const DetailRekamMedis = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  const data = {
-    pasien: "Pasien 6",
-    keluhan: "Gatal pada seluruh tubuh dan panas",
-    tanggal: "11 Juni 2020",
-    dokter: "Dokter SourceCodeKu.com",
-    diagnosa: "Menderita penyakit menular",
-    biayaDokter: 10000,
-    biayaObat: 30000,
-    obat: "Obat SourceCodeKu",
-  };
+  const [data, setData] = useState<RekamMedis | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const totalHarga = data.biayaDokter + data.biayaObat;
+  // Fetch data dari backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/rekam-medis/${id}`);
+        if (!res.ok) throw new Error("Gagal ambil data");
+        const result = await res.json();
+        setData(result);
+      } catch (err) {
+        console.error(err);
+        alert("Gagal mengambil data rekam medis");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchData();
+  }, [id]);
 
   const handlePrint = () => {
     const printContents = document.getElementById("printArea")?.innerHTML;
@@ -24,13 +43,16 @@ const DetailRekamMedis = () => {
       document.body.innerHTML = printContents;
       window.print();
       document.body.innerHTML = originalContents;
-      window.location.reload(); // reload untuk kembalikan tampilan semula
+      window.location.reload();
     }
   };
 
+  if (loading) return <div className="mt-6">Loading...</div>;
+  if (!data) return <div className="mt-6 text-red-500">Data tidak ditemukan.</div>;
+
   return (
     <div className="mt-6 space-y-6">
-      {/* Area yang akan dicetak */}
+      {/* Area Cetak */}
       <div id="printArea" className="space-y-6">
         <div className="bg-white rounded shadow p-6 print:shadow-none print:border print:rounded-none">
           <h2 className="text-xl font-bold mb-6">🩺 Detail Data Rekam Medis</h2>
@@ -60,30 +82,6 @@ const DetailRekamMedis = () => {
                 <span className="font-semibold">Diagnosa:</span>{" "}
                 <span className="text-gray-700">{data.diagnosa}</span>
               </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded shadow overflow-hidden print:shadow-none print:border print:rounded-none">
-          <div className="bg-[#0B2C5F] text-white px-6 py-3 print:bg-white print:text-black print:border-b">
-            <h3 className="font-semibold">Rincian Biaya</h3>
-          </div>
-          <div className="bg-white p-6 text-sm space-y-4 print:p-4">
-            <div className="flex justify-between">
-              <span>Biaya Dokter</span>
-              <span>Rp. {data.biayaDokter.toLocaleString("id-ID")},00</span>
-            </div>
-            <div>
-              <span className="font-semibold">Biaya Obat</span>
-              <div className="flex justify-between mt-1 pl-4">
-                <span>+ {data.obat}</span>
-                <span>Rp. {data.biayaObat.toLocaleString("id-ID")},00</span>
-              </div>
-            </div>
-            <hr />
-            <div className="flex justify-between font-semibold pt-2">
-              <span>Total Harga</span>
-              <span>Rp. {totalHarga.toLocaleString("id-ID")},00</span>
             </div>
           </div>
         </div>

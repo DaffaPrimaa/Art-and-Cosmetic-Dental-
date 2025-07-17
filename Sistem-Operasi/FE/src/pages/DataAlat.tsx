@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 export interface Alat {
+  id: number;
   nama: string;
   jumlah: number;
   harga: number;
@@ -16,42 +18,54 @@ export default function DataAlat() {
   const [entriesPerPage, setEntriesPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Fetch dari backend
   useEffect(() => {
-    const dummy: Alat[] = [
-      {
-        nama: "Obat Flu",
-        jumlah: 10,
-        harga: 15000,
-        keterangan: "Untuk meredakan flu",
-      },
-      {
-        nama: "Paracetamol",
-        jumlah: 20,
-        harga: 12000,
-        keterangan: "Pereda demam",
-      },
-      {
-        nama: "Vitamin C",
-        jumlah: 50,
-        harga: 10000,
-        keterangan: "Meningkatkan daya tahan tubuh",
-      },
-      {
-        nama: "Salep Kulit",
-        jumlah: 15,
-        harga: 20000,
-        keterangan: "Untuk gatal-gatal",
-      },
-    ];
-    setAlat(dummy);
+    fetch("http://localhost:8000/alat")
+      .then((res) => {
+        if (!res.ok) throw new Error("Gagal fetch data alat");
+        return res.json();
+      })
+      .then((data: Alat[]) => setAlat(data))
+      .catch((err) => {
+        console.error("Gagal memuat data:", err);
+        alert("Gagal memuat data alat");
+      });
   }, []);
 
-  const handleDelete = (index: number) => {
-    const yakin = window.confirm("Yakin ingin menghapus data ini?");
-    if (yakin) {
-      const updated = [...alat];
-      updated.splice(index, 1);
-      setAlat(updated);
+  // Hapus dari backend
+  const handleDelete = async (id: number) => {
+    const result = await Swal.fire({
+      title: "Yakin ingin menghapus?",
+      text: "Data ini akan dihapus secara permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/alat/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Gagal menghapus");
+
+      setAlat((prev) => prev.filter((item) => item.id !== id));
+
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Data alat/obat berhasil dihapus.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      console.error("Gagal hapus:", err);
+      Swal.fire("Gagal", "Terjadi kesalahan saat menghapus data.", "error");
     }
   };
 
@@ -63,7 +77,10 @@ export default function DataAlat() {
 
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredAlat.slice(indexOfFirstEntry, indexOfLastEntry);
+  const currentEntries = filteredAlat.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
   const totalPages = Math.ceil(filteredAlat.length / entriesPerPage);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
@@ -121,42 +138,53 @@ export default function DataAlat() {
           <table className="min-w-full text-sm text-left border-collapse">
             <thead className="bg-[#0B2C5F] text-white">
               <tr>
-                <th className="py-2 px-3 font-semibold text-center rounded-tl-md">No</th>
+                <th className="py-2 px-3 font-semibold text-center rounded-tl-md">
+                  No
+                </th>
                 <th className="py-2 px-3 font-semibold">Nama Obat</th>
                 <th className="py-2 px-3 font-semibold">Jumlah</th>
                 <th className="py-2 px-3 font-semibold">Harga</th>
                 <th className="py-2 px-3 font-semibold">Keterangan</th>
-                <th className="py-2 px-3 font-semibold text-center rounded-tr-md">Aksi</th>
+                <th className="py-2 px-3 font-semibold text-center rounded-tr-md">
+                  Aksi
+                </th>
               </tr>
             </thead>
             <tbody>
               {currentEntries.length === 0 ? (
                 <tr>
-                  <td className="py-4 px-3 text-center text-gray-500" colSpan={6}>
+                  <td
+                    className="py-4 px-3 text-center text-gray-500"
+                    colSpan={6}
+                  >
                     Tidak ada data alat / obat
                   </td>
                 </tr>
               ) : (
                 currentEntries.map((a, i) => (
                   <tr
-                    key={indexOfFirstEntry + i}
+                    key={a.id}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="py-2 px-3 text-center">{indexOfFirstEntry + i + 1}.</td>
+                    <td className="py-2 px-3 text-center">
+                      {indexOfFirstEntry + i + 1}.
+                    </td>
                     <td className="py-2 px-3">{a.nama}</td>
                     <td className="py-2 px-3">{a.jumlah}</td>
-                    <td className="py-2 px-3">Rp {a.harga.toLocaleString("id-ID")},00</td>
+                    <td className="py-2 px-3">
+                      Rp {a.harga.toLocaleString("id-ID")},00
+                    </td>
                     <td className="py-2 px-3">{a.keterangan}</td>
                     <td className="py-2 px-3 flex justify-center items-center space-x-2">
                       <button
                         className="text-yellow-500 hover:text-yellow-600 transition-colors p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
-                        onClick={() => navigate(`/alat/edit/${indexOfFirstEntry + i}`)}
+                        onClick={() => navigate(`/alat/edit/${a.id}`)}
                       >
                         <FaEdit />
                       </button>
                       <button
                         className="text-red-500 hover:text-red-600 transition-colors p-1 rounded-full bg-red-100 hover:bg-red-200"
-                        onClick={() => handleDelete(indexOfFirstEntry + i)}
+                        onClick={() => handleDelete(a.id)}
                       >
                         <FaTrash />
                       </button>
@@ -171,7 +199,8 @@ export default function DataAlat() {
         <div className="flex justify-between items-center mt-4">
           <div className="text-gray-600">
             Showing {indexOfFirstEntry + 1} to{" "}
-            {Math.min(indexOfLastEntry, filteredAlat.length)} of {filteredAlat.length} entries
+            {Math.min(indexOfLastEntry, filteredAlat.length)} of{" "}
+            {filteredAlat.length} entries
           </div>
           <nav className="flex space-x-1">
             <button

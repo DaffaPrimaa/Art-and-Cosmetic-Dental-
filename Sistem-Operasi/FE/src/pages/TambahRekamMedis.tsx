@@ -1,63 +1,93 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-export interface RekamMedis {
-  pasien: string;
+interface RekamMedis {
+  pasien_id: number;
+  dokter_id: number;
   keluhan: string;
-  dokter: string;
   diagnosa: string;
-  obat: string;
+  tanggal: string;
 }
 
-interface TambahRekamMedisProps {
-  onSubmit?: (data: RekamMedis) => void;
-  onClose?: () => void;
+interface Dokter {
+  id: number;
+  nama: string;
 }
 
-const TambahRekamMedis: React.FC<TambahRekamMedisProps> = ({
-  onSubmit,
-  onClose,
-}) => {
+interface Pasien {
+  id: number;
+  nama: string;
+}
+
+const TambahRekamMedis: React.FC = () => {
   const navigate = useNavigate();
   const [showNotif, setShowNotif] = useState(false);
 
   const [form, setForm] = useState<RekamMedis>({
-    pasien: "",
+    pasien_id: 0,
+    dokter_id: 0,
     keluhan: "",
-    dokter: "",
     diagnosa: "",
-    obat: "",
+    tanggal: new Date().toISOString().split("T")[0], // default hari ini
   });
 
+  const [dokterList, setDokterList] = useState<Dokter[]>([]);
+  const [pasienList, setPasienList] = useState<Pasien[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/dokter")
+      .then((res) => res.json())
+      .then((data) => setDokterList(data));
+
+    fetch("http://localhost:8000/pasien")
+      .then((res) => res.json())
+      .then((data) => setPasienList(data));
+  }, []);
+
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === "pasien_id" || name === "dokter_id" ? parseInt(value) : value,
+    }));
   };
 
   const handleReset = () => {
     setForm({
-      pasien: "",
+      pasien_id: 0,
+      dokter_id: 0,
       keluhan: "",
-      dokter: "",
       diagnosa: "",
-      obat: "",
+      tanggal: new Date().toISOString().split("T")[0],
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit?.(form);
-    setShowNotif(true);
-    setTimeout(() => {
-      setShowNotif(false);
-      onClose?.();
-      navigate("/rekam-medis");
-    }, 1500);
+
+    try {
+      const response = await fetch("http://localhost:8000/rekam-medis/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (!response.ok) throw new Error("Gagal menambahkan rekam medis");
+
+      setShowNotif(true);
+      setTimeout(() => {
+        setShowNotif(false);
+        navigate("/rekam-medis");
+      }, 1500);
+    } catch (err) {
+      alert("Gagal menyimpan data. Periksa konsol.");
+      console.error(err);
+    }
   };
 
   return (
@@ -69,17 +99,37 @@ const TambahRekamMedis: React.FC<TambahRekamMedisProps> = ({
           <div>
             <label className="block font-medium">Pasien</label>
             <select
-              name="pasien"
-              value={form.pasien}
+              name="pasien_id"
+              value={form.pasien_id}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
               required
             >
               <option value="">Pilih Pasien</option>
-              <option value="Pasien 1">Pasien 1</option>
-              <option value="Pasien 6">Pasien 6</option>
-              <option value="Pasien 7">Pasien 7</option>
-              {/* Tambahkan opsi pasien lainnya */}
+              {pasienList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nama}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Dokter */}
+          <div>
+            <label className="block font-medium">Dokter</label>
+            <select
+              name="dokter_id"
+              value={form.dokter_id}
+              onChange={handleChange}
+              className="border w-full px-3 py-2 rounded"
+              required
+            >
+              <option value="">Pilih Dokter</option>
+              {dokterList.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.nama}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -96,23 +146,6 @@ const TambahRekamMedis: React.FC<TambahRekamMedisProps> = ({
             />
           </div>
 
-          {/* Dokter */}
-          <div>
-            <label className="block font-medium">Dokter</label>
-            <select
-              name="dokter"
-              value={form.dokter}
-              onChange={handleChange}
-              className="border w-full px-3 py-2 rounded"
-              required
-            >
-              <option value="">Pilih Dokter</option>
-              <option value="Dokter 1">Dokter 1</option>
-              <option value="Dokter 4">Dokter 4</option>
-              {/* Tambahkan opsi dokter lainnya */}
-            </select>
-          </div>
-
           {/* Diagnosa */}
           <div>
             <label className="block font-medium">Diagnosa</label>
@@ -127,16 +160,16 @@ const TambahRekamMedis: React.FC<TambahRekamMedisProps> = ({
             />
           </div>
 
-          {/* Obat */}
+          {/* Tanggal */}
           <div>
-            <label className="block font-medium">Obat</label>
+            <label className="block font-medium">Tanggal</label>
             <input
-              type="text"
-              name="obat"
-              value={form.obat}
+              type="date"
+              name="tanggal"
+              value={form.tanggal}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
-              placeholder="Masukkan obat yang diberikan"
+              required
             />
           </div>
 
