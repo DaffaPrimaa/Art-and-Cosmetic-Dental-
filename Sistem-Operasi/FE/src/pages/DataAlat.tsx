@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
 export interface Alat {
+  id: number;
   nama: string;
   jumlah: number;
   harga: number;
@@ -16,42 +17,36 @@ export default function DataAlat() {
   const [entriesPerPage, setEntriesPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Fetch dari backend
   useEffect(() => {
-    const dummy: Alat[] = [
-      {
-        nama: "Obat Flu",
-        jumlah: 10,
-        harga: 15000,
-        keterangan: "Untuk meredakan flu",
-      },
-      {
-        nama: "Paracetamol",
-        jumlah: 20,
-        harga: 12000,
-        keterangan: "Pereda demam",
-      },
-      {
-        nama: "Vitamin C",
-        jumlah: 50,
-        harga: 10000,
-        keterangan: "Meningkatkan daya tahan tubuh",
-      },
-      {
-        nama: "Salep Kulit",
-        jumlah: 15,
-        harga: 20000,
-        keterangan: "Untuk gatal-gatal",
-      },
-    ];
-    setAlat(dummy);
+    fetch("http://localhost:8000/alat")
+      .then((res) => {
+        if (!res.ok) throw new Error("Gagal fetch data alat");
+        return res.json();
+      })
+      .then((data: Alat[]) => setAlat(data))
+      .catch((err) => {
+        console.error("Gagal memuat data:", err);
+        alert("Gagal memuat data alat");
+      });
   }, []);
 
-  const handleDelete = (index: number) => {
+  // Hapus dari backend
+  const handleDelete = async (id: number) => {
     const yakin = window.confirm("Yakin ingin menghapus data ini?");
-    if (yakin) {
-      const updated = [...alat];
-      updated.splice(index, 1);
-      setAlat(updated);
+    if (!yakin) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/alat/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Gagal menghapus");
+
+      // Refresh state setelah hapus
+      setAlat((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      console.error("Gagal hapus:", err);
+      alert("Terjadi kesalahan saat menghapus data.");
     }
   };
 
@@ -139,10 +134,12 @@ export default function DataAlat() {
               ) : (
                 currentEntries.map((a, i) => (
                   <tr
-                    key={indexOfFirstEntry + i}
+                    key={a.id}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="py-2 px-3 text-center">{indexOfFirstEntry + i + 1}.</td>
+                    <td className="py-2 px-3 text-center">
+                      {indexOfFirstEntry + i + 1}.
+                    </td>
                     <td className="py-2 px-3">{a.nama}</td>
                     <td className="py-2 px-3">{a.jumlah}</td>
                     <td className="py-2 px-3">Rp {a.harga.toLocaleString("id-ID")},00</td>
@@ -150,13 +147,13 @@ export default function DataAlat() {
                     <td className="py-2 px-3 flex justify-center items-center space-x-2">
                       <button
                         className="text-yellow-500 hover:text-yellow-600 transition-colors p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
-                        onClick={() => navigate(`/alat/edit/${indexOfFirstEntry + i}`)}
+                        onClick={() => navigate(`/alat/edit/${a.id}`)}
                       >
                         <FaEdit />
                       </button>
                       <button
                         className="text-red-500 hover:text-red-600 transition-colors p-1 rounded-full bg-red-100 hover:bg-red-200"
-                        onClick={() => handleDelete(indexOfFirstEntry + i)}
+                        onClick={() => handleDelete(a.id)}
                       >
                         <FaTrash />
                       </button>

@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
-// Tipe data
 export type RekamMedis = {
-  tanggalPeriksa: string; // format: YYYY-MM-DD
+  id: number;
+  tanggal: string;
   pasien: string;
   keluhan: string;
   dokter: string;
@@ -20,52 +20,47 @@ export default function RekamMedis() {
   const [selectedMonth, setSelectedMonth] = useState("");
 
   useEffect(() => {
-    const dummy: RekamMedis[] = [
-      {
-        tanggalPeriksa: "2025-06-01",
-        pasien: "Rina Aulia",
-        keluhan: "Demam dan batuk",
-        dokter: "dr. Daffa",
-        diagnosa: "Flu ringan",
-      },
-      {
-        tanggalPeriksa: "2025-07-03",
-        pasien: "Budi Santoso",
-        keluhan: "Sakit kepala",
-        dokter: "dr. Sari",
-        diagnosa: "Migrain",
-      },
-      {
-        tanggalPeriksa: "2025-07-05",
-        pasien: "Toni Wijaya",
-        keluhan: "Mata merah",
-        dokter: "dr. Daffa",
-        diagnosa: "Konjungtivitis",
-      },
-      
-    ];
-
-    setRekamMedis(dummy);
+    fetchRekamMedis();
   }, []);
 
-  const handleDelete = (index: number) => {
+  const fetchRekamMedis = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/rekam-medis");
+      if (!res.ok) throw new Error("Gagal fetch data");
+      const data = await res.json();
+      setRekamMedis(data);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      alert("Gagal mengambil data rekam medis dari server.");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
     const yakin = window.confirm("Yakin ingin menghapus data ini?");
-    if (yakin) {
-      const updated = [...rekamMedis];
-      updated.splice(index, 1);
-      setRekamMedis(updated);
+    if (!yakin) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/rekam-medis/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Gagal menghapus dari server");
+
+      alert("Data berhasil dihapus");
+      fetchRekamMedis(); // Refresh data
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menghapus data dari server.");
     }
   };
 
   const filteredData = rekamMedis.filter((rm) => {
     const matchesSearch = Object.values(rm).some((val) =>
-      val.toLowerCase().includes(searchTerm.toLowerCase())
+      String(val).toLowerCase().includes(searchTerm.toLowerCase())
     );
-
     const matchesMonth = selectedMonth
-      ? rm.tanggalPeriksa.startsWith(selectedMonth)
+      ? rm.tanggal.startsWith(selectedMonth)
       : true;
-
     return matchesSearch && matchesMonth;
   });
 
@@ -109,9 +104,7 @@ export default function RekamMedis() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <label htmlFor="search" className="font-semibold">
-              Search:
-            </label>
+            <label htmlFor="search" className="font-semibold">Search:</label>
             <input
               type="text"
               id="search"
@@ -160,13 +153,13 @@ export default function RekamMedis() {
               ) : (
                 currentEntries.map((rm, i) => (
                   <tr
-                    key={indexOfFirst + i}
+                    key={rm.id}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
                     <td className="py-2 px-3 text-center">
                       {indexOfFirst + i + 1}.
                     </td>
-                    <td className="py-2 px-3">{rm.tanggalPeriksa}</td>
+                    <td className="py-2 px-3">{rm.tanggal}</td>
                     <td className="py-2 px-3">{rm.pasien}</td>
                     <td className="py-2 px-3">{rm.keluhan}</td>
                     <td className="py-2 px-3">{rm.dokter}</td>
@@ -174,23 +167,19 @@ export default function RekamMedis() {
                     <td className="py-2 px-3 flex justify-center items-center space-x-2">
                       <button
                         className="text-green-600 hover:text-green-700 p-1 rounded-full bg-green-100 hover:bg-green-200"
-                        onClick={() =>
-                          navigate(`/rekam-medis/detail/${indexOfFirst + i}`)
-                        }
+                        onClick={() => navigate(`/rekam-medis/detail/${rm.id}`)}
                       >
                         <FaEye />
                       </button>
                       <button
                         className="text-yellow-500 hover:text-yellow-600 p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
-                        onClick={() =>
-                          navigate(`/rekam-medis/edit/${indexOfFirst + i}`)
-                        }
+                        onClick={() => navigate(`/rekam-medis/edit/${rm.id}`)}
                       >
                         <FaEdit />
                       </button>
                       <button
                         className="text-red-500 hover:text-red-600 p-1 rounded-full bg-red-100 hover:bg-red-200"
-                        onClick={() => handleDelete(indexOfFirst + i)}
+                        onClick={() => handleDelete(rm.id)}
                       >
                         <FaTrash />
                       </button>

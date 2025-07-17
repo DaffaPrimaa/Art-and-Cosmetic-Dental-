@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
-import { useNavigate } from "react-router-dom"; // ✅ Tambahkan ini
 
 export interface Pasien {
   nama: string;
@@ -10,13 +10,10 @@ export interface Pasien {
   alamat: string;
 }
 
-interface TambahPasienProps {
-  onSubmit?: (data: Pasien) => void;
-  onClose?: () => void;
-}
+export default function TambahPasien() {
+  const navigate = useNavigate();
 
-const TambahPasien: React.FC<TambahPasienProps> = ({ onSubmit, onClose }) => {
-  const [form, setForm] = useState<Pasien>({
+  const [formData, setFormData] = useState<Pasien>({
     nama: "",
     gender: "Laki-laki",
     email: "",
@@ -25,141 +22,159 @@ const TambahPasien: React.FC<TambahPasienProps> = ({ onSubmit, onClose }) => {
   });
 
   const [showNotif, setShowNotif] = useState(false);
-  const navigate = useNavigate(); // ✅ Inisialisasi navigate
+  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit?.(form);
-    setShowNotif(true);
-    setTimeout(() => {
-      setShowNotif(false);
-      onClose?.();
-      navigate("/pasien"); // ✅ Navigasi setelah submit
-    }, 1500);
+    setError("");
+
+    try {
+      const res = await fetch("http://localhost:8000/pasien", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal menambahkan pasien");
+      }
+
+      setShowNotif(true);
+      setTimeout(() => {
+        navigate("/pasien");
+      }, 1000);
+    } catch (err) {
+      setError("Terjadi kesalahan saat menyimpan data.");
+      console.error(err);
+    }
   };
 
   const handleReset = () => {
-    setForm({
+    setFormData({
       nama: "",
       gender: "Laki-laki",
       email: "",
       telp: "",
       alamat: "",
     });
+    setError("");
   };
 
   return (
-    <div className="relative">
-      <div className="bg-white p-6 rounded shadow-md mb-6 mt-6">
-        <h2 className="text-xl font-semibold mb-4">➕ Tambah Data Pasien</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block font-medium">Nama Pasien</label>
-            <input
-              type="text"
-              name="nama"
-              value={form.nama}
-              onChange={handleChange}
-              className="border w-full px-3 py-2 rounded"
-              required
-            />
-          </div>
+    <div className="bg-white p-6 rounded shadow-md mb-6 mt-6">
+      <h2 className="text-2xl font-semibold mb-4">➕ Tambah Data Pasien</h2>
 
-          <div>
-            <label className="block font-medium">Jenis Kelamin</label>
-            <div className="flex space-x-4 mt-1">
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="Laki-laki"
-                  checked={form.gender === "Laki-laki"}
-                  onChange={handleChange}
-                />
-                <span className="ml-1">Laki-laki</span>
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="Perempuan"
-                  checked={form.gender === "Perempuan"}
-                  onChange={handleChange}
-                />
-                <span className="ml-1">Perempuan</span>
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-medium">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              className="border w-full px-3 py-2 rounded"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium">Alamat</label>
-            <textarea
-              name="alamat"
-              value={form.alamat}
-              onChange={handleChange}
-              className="border w-full px-3 py-2 rounded"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium">Nomor Telepon</label>
-            <input
-              type="text"
-              name="telp"
-              value={form.telp}
-              onChange={handleChange}
-              className="border w-full px-3 py-2 rounded"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2 mt-4">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-            >
-              Reset
-            </button>
-            <button
-              type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              Simpan
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Notifikasi */}
       {showNotif && (
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-700 px-6 py-3 rounded-lg shadow-md flex items-center gap-2 z-50 animate-bounce">
-          <FaCheckCircle className="text-green-600" />
-          <span>Data pasien telah ditambahkan</span>
+        <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded mb-4 flex items-center gap-2">
+          <FaCheckCircle />
+          <span>Data pasien berhasil ditambahkan.</span>
         </div>
       )}
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-800 px-4 py-2 rounded mb-4">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block font-medium">Nama Pasien</label>
+          <input
+            name="nama"
+            value={formData.nama}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Jenis Kelamin</label>
+          <div className="flex space-x-4 mt-1">
+            <label>
+              <input
+                type="radio"
+                name="gender"
+                value="Laki-laki"
+                checked={formData.gender === "Laki-laki"}
+                onChange={handleChange}
+              />
+              <span className="ml-1">Laki-laki</span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="gender"
+                value="Perempuan"
+                checked={formData.gender === "Perempuan"}
+                onChange={handleChange}
+              />
+              <span className="ml-1">Perempuan</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label className="block font-medium">Email</label>
+          <input
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Nomor Telepon</label>
+          <input
+            name="telp"
+            value={formData.telp}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Alamat</label>
+          <textarea
+            name="alamat"
+            value={formData.alamat}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+            rows={3}
+            required
+          />
+        </div>
+
+        <div className="flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+          >
+            Reset
+          </button>
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Simpan
+          </button>
+        </div>
+      </form>
     </div>
   );
-};
-
-export default TambahPasien;
+}

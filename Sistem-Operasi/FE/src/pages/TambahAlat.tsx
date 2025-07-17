@@ -30,14 +30,30 @@ export default function TambahAlat() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowNotif(true);
 
-    setTimeout(() => {
-      setShowNotif(false);
-      navigate("/alat");
-    }, 1000);
+    try {
+      const response = await fetch("http://localhost:8000/alat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menambahkan data alat");
+      }
+
+      setShowNotif(true);
+      setTimeout(() => {
+        setShowNotif(false);
+        navigate("/alat");
+      }, 1000);
+    } catch (err) {
+      alert("Terjadi kesalahan saat menyimpan: " + err);
+    }
   };
 
   return (

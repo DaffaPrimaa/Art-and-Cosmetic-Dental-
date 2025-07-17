@@ -8,21 +8,6 @@ export interface Alat {
   keterangan: string;
 }
 
-const dummyData: Alat[] = [
-  {
-    nama: "Obat Paracetamol",
-    jumlah: 10,
-    harga: 5000,
-    keterangan: "Obat penurun demam",
-  },
-  {
-    nama: "Obat Amoxicillin",
-    jumlah: 20,
-    harga: 8000,
-    keterangan: "Antibiotik",
-  },
-];
-
 export default function EditAlat() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -36,12 +21,21 @@ export default function EditAlat() {
 
   const [showNotif, setShowNotif] = useState(false);
 
+  // Ambil data dari backend
   useEffect(() => {
-    if (id) {
-      const index = parseInt(id);
-      const selected = dummyData[index];
-      if (selected) setFormData(selected);
-    }
+    const fetchAlat = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/alat/${id}`);
+        if (!res.ok) throw new Error("Gagal mengambil data alat");
+        const data = await res.json();
+        setFormData(data);
+      } catch (error) {
+        console.error("Error fetching alat:", error);
+        alert("Gagal mengambil data alat");
+      }
+    };
+
+    if (id) fetchAlat();
   }, [id]);
 
   const handleChange = (
@@ -54,14 +48,29 @@ export default function EditAlat() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowNotif(true);
 
-    setTimeout(() => {
-      setShowNotif(false);
-      navigate("/alat");
-    }, 1000);
+    try {
+      const res = await fetch(`http://localhost:8000/alat/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) throw new Error("Gagal mengupdate data alat");
+
+      setShowNotif(true);
+      setTimeout(() => {
+        setShowNotif(false);
+        navigate("/alat");
+      }, 1000);
+    } catch (error) {
+      console.error("Error update alat:", error);
+      alert("Gagal memperbarui data alat");
+    }
   };
 
   return (

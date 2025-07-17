@@ -1,28 +1,70 @@
-import { useState } from "react";
-import { useNavigate} from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
 
-interface RekamMedis {
-  tanggalPeriksa: string;
-  pasien: string;
+interface Pasien {
+  id: number;
+  nama: string;
+}
+
+interface Dokter {
+  id: number;
+  nama: string;
+}
+
+interface RekamMedisForm {
+  tanggal: string;
+  pasien_id: number | "";
   keluhan: string;
-  dokter: string;
+  dokter_id: number | "";
   diagnosa: string;
-  obat: string;
 }
 
 const EditRekamMedis = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [showNotif, setShowNotif] = useState(false);
-
-  const [form, setForm] = useState<RekamMedis>({
-    tanggalPeriksa: "2020-06-11", // contoh default, sebaiknya fetch real data
-    pasien: "Pasien 6",
-    keluhan: "Demam tinggi",
-    dokter: "Dokter 1",
-    diagnosa: "Influenza",
-    obat: "Paracetamol, Vitamin C",
+  const [form, setForm] = useState<RekamMedisForm>({
+    tanggal: "",
+    pasien_id: "",
+    keluhan: "",
+    dokter_id: "",
+    diagnosa: "",
   });
+
+  const [pasienList, setPasienList] = useState<Pasien[]>([]);
+  const [dokterList, setDokterList] = useState<Dokter[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [rekamRes, pasienRes, dokterRes] = await Promise.all([
+          fetch(`http://localhost:8000/rekam-medis/${id}`),
+          fetch("http://localhost:8000/pasien"),
+          fetch("http://localhost:8000/dokter"),
+        ]);
+
+        const rekamData = await rekamRes.json();
+        const pasienData = await pasienRes.json();
+        const dokterData = await dokterRes.json();
+
+        setForm({
+          tanggal: rekamData.tanggal,
+          pasien_id: rekamData.pasien_id || "",
+          keluhan: rekamData.keluhan,
+          dokter_id: rekamData.dokter_id || "",
+          diagnosa: rekamData.diagnosa,
+        });
+
+        setPasienList(pasienData);
+        setDokterList(dokterData);
+      } catch (err) {
+        console.error("Gagal fetch data:", err);
+      }
+    };
+
+    fetchData();
+  }, [id]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -30,17 +72,38 @@ const EditRekamMedis = () => {
     >
   ) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+
+    setForm((prevForm) => ({
+      ...prevForm,
+      [name]: name.includes("_id")
+        ? value === "" ? "" : parseInt(value)
+        : value,
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulasikan penyimpanan data
-    setShowNotif(true);
-    setTimeout(() => {
-      setShowNotif(false);
-      navigate("/rekam-medis");
-    }, 1500);
+    try {
+      const res = await fetch(`http://localhost:8000/rekam-medis/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok) {
+        setShowNotif(true);
+        setTimeout(() => {
+          setShowNotif(false);
+          navigate("/rekam-medis");
+        }, 1500);
+      } else {
+        console.error("Gagal update data");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+    }
   };
 
   return (
@@ -53,8 +116,8 @@ const EditRekamMedis = () => {
             <label className="block font-medium">Tanggal Periksa</label>
             <input
               type="date"
-              name="tanggalPeriksa"
-              value={form.tanggalPeriksa}
+              name="tanggal"
+              value={form.tanggal}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
               required
@@ -63,14 +126,20 @@ const EditRekamMedis = () => {
 
           <div>
             <label className="block font-medium">Pasien</label>
-            <input
-              type="text"
-              name="pasien"
-              value={form.pasien}
+            <select
+              name="pasien_id"
+              value={form.pasien_id}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
               required
-            />
+            >
+              <option value="">-- Pilih Pasien --</option>
+              {pasienList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nama}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -86,14 +155,20 @@ const EditRekamMedis = () => {
 
           <div>
             <label className="block font-medium">Dokter</label>
-            <input
-              type="text"
-              name="dokter"
-              value={form.dokter}
+            <select
+              name="dokter_id"
+              value={form.dokter_id}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
               required
-            />
+            >
+              <option value="">-- Pilih Dokter --</option>
+              {dokterList.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.nama}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -101,17 +176,6 @@ const EditRekamMedis = () => {
             <textarea
               name="diagnosa"
               value={form.diagnosa}
-              onChange={handleChange}
-              className="border w-full px-3 py-2 rounded"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium">Obat</label>
-            <textarea
-              name="obat"
-              value={form.obat}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
               required
@@ -136,7 +200,6 @@ const EditRekamMedis = () => {
         </form>
       </div>
 
-      {/* Notifikasi */}
       {showNotif && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-700 px-6 py-3 rounded-lg shadow-md flex items-center gap-2 z-50 animate-bounce">
           <FaCheckCircle className="text-green-600" />

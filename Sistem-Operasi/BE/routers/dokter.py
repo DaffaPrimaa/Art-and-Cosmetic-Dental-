@@ -1,19 +1,18 @@
 # routes/dokter.py
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Dokter
 from schemas import DokterCreate, DokterUpdate, DokterOut
 
-router = APIRouter(
-    prefix="/dokter",
-    tags=["Dokter"]
-)
+router = APIRouter()
 
+# ✅ Ambil semua data dokter
 @router.get("/", response_model=list[DokterOut])
 def get_all_dokter(db: Session = Depends(get_db)):
     return db.query(Dokter).all()
 
+# ✅ Tambah data dokter
 @router.post("/", response_model=DokterOut)
 def create_dokter(dokter: DokterCreate, db: Session = Depends(get_db)):
     db_dokter = Dokter(**dokter.dict())
@@ -22,6 +21,7 @@ def create_dokter(dokter: DokterCreate, db: Session = Depends(get_db)):
     db.refresh(db_dokter)
     return db_dokter
 
+# ✅ Ambil dokter berdasarkan ID
 @router.get("/{dokter_id}", response_model=DokterOut)
 def get_dokter_by_id(dokter_id: int, db: Session = Depends(get_db)):
     dokter = db.query(Dokter).get(dokter_id)
@@ -29,6 +29,7 @@ def get_dokter_by_id(dokter_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Dokter tidak ditemukan")
     return dokter
 
+# ✅ Perbarui data dokter
 @router.put("/{dokter_id}", response_model=DokterOut)
 def update_dokter(dokter_id: int, update: DokterUpdate, db: Session = Depends(get_db)):
     dokter = db.query(Dokter).get(dokter_id)
@@ -40,6 +41,7 @@ def update_dokter(dokter_id: int, update: DokterUpdate, db: Session = Depends(ge
     db.refresh(dokter)
     return dokter
 
+# ✅ Hapus data dokter
 @router.delete("/{dokter_id}")
 def delete_dokter(dokter_id: int, db: Session = Depends(get_db)):
     dokter = db.query(Dokter).get(dokter_id)

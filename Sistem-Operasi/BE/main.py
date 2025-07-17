@@ -1,22 +1,25 @@
 # BE/main.py
-
 from fastapi import FastAPI
 from database import Base, engine
 import models
 from fastapi.middleware.cors import CORSMiddleware
 
 # Pastikan router sudah ada
-from routers import pasien, dokter, rekam_medis
+from routers.dokter import router as dokter_router
+from routers.pasien import router as pasien_router
+from routers.rekam_medis import router as rekam_medis_router
+from routers.alat import router as alat_router
 
 # Buat semua tabel dari model
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)   
 
 app = FastAPI()
 
 # Registrasi router jika tersedia
-app.include_router(pasien.router, prefix="/pasien", tags=["Pasien"])
-app.include_router(dokter.router, prefix="/dokter", tags=["Dokter"])
-app.include_router(rekam_medis.router, prefix="/rekam-medis", tags=["Rekam Medis"])
+app.include_router(pasien_router, prefix="/pasien", tags=["Pasien"])
+app.include_router(dokter_router, prefix="/dokter", tags=["Dokter"])
+app.include_router(rekam_medis_router, prefix="/rekam-medis", tags=["Rekam Medis"])
+app.include_router(alat_router, prefix="/alat", tags=["Alat"])
 
 @app.get("/")
 def home():
@@ -31,4 +34,4 @@ app.add_middleware(
 )
 
 # Include router
-app.include_router(dokter.router)
+
