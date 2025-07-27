@@ -7,6 +7,7 @@ interface RekamMedis {
   dokter_id: number;
   keluhan: string;
   diagnosa: string;
+  tindakan: string;
   tanggal: string;
 }
 
@@ -29,6 +30,7 @@ const TambahRekamMedis: React.FC = () => {
     dokter_id: 0,
     keluhan: "",
     diagnosa: "",
+    tindakan: "",
     tanggal: new Date().toISOString().split("T")[0], // default hari ini
   });
 
@@ -46,12 +48,17 @@ const TambahRekamMedis: React.FC = () => {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: name === "pasien_id" || name === "dokter_id" ? parseInt(value) : value,
+      [name]:
+        name === "pasien_id" || name === "dokter_id"
+          ? parseInt(value)
+          : value,
     }));
   };
 
@@ -61,6 +68,7 @@ const TambahRekamMedis: React.FC = () => {
       dokter_id: 0,
       keluhan: "",
       diagnosa: "",
+      tindakan: "",
       tanggal: new Date().toISOString().split("T")[0],
     });
   };
@@ -93,8 +101,23 @@ const TambahRekamMedis: React.FC = () => {
   return (
     <div className="relative">
       <div className="bg-white p-6 rounded shadow-md mb-6 mt-6">
-        <h2 className="text-xl font-semibold mb-4">➕ Tambah Data Rekam Medis</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          ➕ Tambah Data Rekam Medis
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Tanggal */}
+          <div>
+            <label className="block font-medium">Tanggal</label>
+            <input
+              type="date"
+              name="tanggal"
+              value={form.tanggal}
+              onChange={handleChange}
+              className="border w-full px-3 py-2 rounded"
+              required
+            />
+          </div>
+
           {/* Pasien */}
           <div>
             <label className="block font-medium">Pasien</label>
@@ -136,7 +159,8 @@ const TambahRekamMedis: React.FC = () => {
           {/* Keluhan */}
           <div>
             <label className="block font-medium">Keluhan</label>
-            <textarea
+            <input
+              type="text"
               name="keluhan"
               value={form.keluhan}
               onChange={handleChange}
@@ -160,15 +184,16 @@ const TambahRekamMedis: React.FC = () => {
             />
           </div>
 
-          {/* Tanggal */}
+          {/* Tindakan */}
           <div>
-            <label className="block font-medium">Tanggal</label>
+            <label className="block font-medium">Tindakan</label>
             <input
-              type="date"
-              name="tanggal"
-              value={form.tanggal}
+              type="text"
+              name="tindakan"
+              value={form.tindakan}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
+              placeholder="Masukkan tindakan"
               required
             />
           </div>

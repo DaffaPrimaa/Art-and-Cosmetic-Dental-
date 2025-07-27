@@ -18,18 +18,21 @@ interface RekamMedisForm {
   keluhan: string;
   dokter_id: number | "";
   diagnosa: string;
+  tindakan: string;
 }
 
 const EditRekamMedis = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [showNotif, setShowNotif] = useState(false);
+
   const [form, setForm] = useState<RekamMedisForm>({
     tanggal: "",
     pasien_id: "",
     keluhan: "",
     dokter_id: "",
     diagnosa: "",
+    tindakan: "",
   });
 
   const [pasienList, setPasienList] = useState<Pasien[]>([]);
@@ -54,6 +57,7 @@ const EditRekamMedis = () => {
           keluhan: rekamData.keluhan,
           dokter_id: rekamData.dokter_id || "",
           diagnosa: rekamData.diagnosa,
+          tindakan: rekamData.tindakan || "",
         });
 
         setPasienList(pasienData);
@@ -67,17 +71,13 @@ const EditRekamMedis = () => {
   }, [id]);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
 
     setForm((prevForm) => ({
       ...prevForm,
-      [name]: name.includes("_id")
-        ? value === "" ? "" : parseInt(value)
-        : value,
+      [name]: name.includes("_id") ? (value === "" ? "" : parseInt(value)) : value,
     }));
   };
 
@@ -144,11 +144,12 @@ const EditRekamMedis = () => {
 
           <div>
             <label className="block font-medium">Keluhan</label>
-            <textarea
+            <input
               name="keluhan"
               value={form.keluhan}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
+              placeholder="Masukkan keluhan pasien"
               required
             />
           </div>
@@ -173,11 +174,24 @@ const EditRekamMedis = () => {
 
           <div>
             <label className="block font-medium">Diagnosa</label>
-            <textarea
+            <input
               name="diagnosa"
               value={form.diagnosa}
               onChange={handleChange}
               className="border w-full px-3 py-2 rounded"
+              placeholder="Masukkan diagnosa"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium">Tindakan</label>
+            <input
+              name="tindakan"
+              value={form.tindakan}
+              onChange={handleChange}
+              className="border w-full px-3 py-2 rounded"
+              placeholder="Masukkan tindakan"
               required
             />
           </div>
