@@ -32,14 +32,20 @@ class Dokter(Base):
 
 class RekamMedis(Base):
     __tablename__ = "rekam_medis"
-    id = Column(Integer, primary_key=True, index=True)
 
+    id = Column(Integer, primary_key=True, index=True)
+    
     pasien_id = Column(Integer, ForeignKey("pasien.id"))
     dokter_id = Column(Integer, ForeignKey("dokter.id"))
 
+    tanggal = Column(Date)
     keluhan = Column(String)
     diagnosa = Column(String)
-    tanggal = Column(Date)
+    tindakan = Column(String)
+
+    biaya_dokter = Column(Integer, default=0)
+    biaya_tindakan = Column(Integer, default=0)
+    biaya_obat = Column(Integer, default=0)
 
     # Relasi ke Pasien dan Dokter
     pasien = relationship("Pasien", back_populates="rekam_medis")

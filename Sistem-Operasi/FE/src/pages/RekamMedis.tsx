@@ -8,8 +8,9 @@ export type RekamMedis = {
   tanggal: string;
   pasien: string;
   keluhan: string;
-  dokter: string;
   diagnosa: string;
+  tindakan: string;
+  dokter: string;
 };
 
 export default function RekamMedis() {
@@ -65,7 +66,7 @@ export default function RekamMedis() {
         showConfirmButton: false,
       });
 
-      fetchRekamMedis(); // Refresh data
+      fetchRekamMedis();
     } catch (err) {
       console.error(err);
       Swal.fire("Gagal", "Terjadi kesalahan saat menghapus data.", "error");
@@ -158,16 +159,15 @@ export default function RekamMedis() {
                 <th className="py-2 px-3 text-center rounded-tl-md">No</th>
                 <th className="py-2 px-3">Tanggal</th>
                 <th className="py-2 px-3">Pasien</th>
-                <th className="py-2 px-3">Keluhan</th>
+                <th className="py-2 px-3">Keterangan</th>
                 <th className="py-2 px-3">Dokter</th>
-                <th className="py-2 px-3">Diagnosa</th>
                 <th className="py-2 px-3 text-center rounded-tr-md">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {currentEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-4 text-center text-gray-500">
+                  <td colSpan={6} className="py-4 text-center text-gray-500">
                     Tidak ada data rekam medis
                   </td>
                 </tr>
@@ -182,28 +182,37 @@ export default function RekamMedis() {
                     </td>
                     <td className="py-2 px-3">{rm.tanggal}</td>
                     <td className="py-2 px-3">{rm.pasien}</td>
-                    <td className="py-2 px-3">{rm.keluhan}</td>
+                    <td className="py-2 px-3 whitespace-pre-line">
+                      <strong>Keluhan:</strong> {rm.keluhan}
+                      {"\n"}
+                      <strong>Diagnosa:</strong> {rm.diagnosa}
+                      {"\n"}
+                      <strong>Tindakan:</strong> {rm.tindakan}
+                    </td>
                     <td className="py-2 px-3">{rm.dokter}</td>
-                    <td className="py-2 px-3">{rm.diagnosa}</td>
-                    <td className="py-2 px-3 flex justify-center items-center space-x-2">
-                      <button
-                        className="text-green-600 hover:text-green-700 p-1 rounded-full bg-green-100 hover:bg-green-200"
-                        onClick={() => navigate(`/rekam-medis/detail/${rm.id}`)}
-                      >
-                        <FaEye />
-                      </button>
-                      <button
-                        className="text-yellow-500 hover:text-yellow-600 p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
-                        onClick={() => navigate(`/rekam-medis/edit/${rm.id}`)}
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        className="text-red-500 hover:text-red-600 p-1 rounded-full bg-red-100 hover:bg-red-200"
-                        onClick={() => handleDelete(rm.id)}
-                      >
-                        <FaTrash />
-                      </button>
+                    <td className="h-full px-3 py-2">
+                      <div className="flex h-full items-center justify-center space-x-2">
+                        <button
+                          className="text-green-600 hover:text-green-700 p-1 rounded-full bg-green-100 hover:bg-green-200"
+                          onClick={() =>
+                            navigate(`/rekam-medis/detail/${rm.id}`)
+                          }
+                        >
+                          <FaEye />
+                        </button>
+                        <button
+                          className="text-yellow-500 hover:text-yellow-600 p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
+                          onClick={() => navigate(`/rekam-medis/edit/${rm.id}`)}
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="text-red-500 hover:text-red-600 p-1 rounded-full bg-red-100 hover:bg-red-200"
+                          onClick={() => handleDelete(rm.id)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

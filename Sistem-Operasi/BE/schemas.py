@@ -48,7 +48,11 @@ class RekamMedisBase(BaseModel):
     dokter_id: int
     keluhan: str
     diagnosa: str
+    tindakan: str
     tanggal: date | None = None
+    biaya_dokter: int = 0
+    biaya_tindakan: int = 0
+    biaya_obat: int = 0
 
 class RekamMedisCreate(RekamMedisBase):
     pass
@@ -58,7 +62,6 @@ class RekamMedisOut(RekamMedisBase):
 
     class Config:
         from_attributes = True
-
 
 # ==== alat ====
 class AlatBase(BaseModel):
