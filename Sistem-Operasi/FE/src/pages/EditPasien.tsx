@@ -145,7 +145,7 @@ export default function EditPasien() {
           <label className="block font-medium">Email</label>
           <input
             name="email"
-            type="email"
+            type="text"
             value={formData.email}
             onChange={handleChange}
             className="w-full border p-2 rounded"

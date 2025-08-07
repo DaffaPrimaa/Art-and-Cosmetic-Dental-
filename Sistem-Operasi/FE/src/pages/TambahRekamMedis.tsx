@@ -31,11 +31,17 @@ const TambahRekamMedis: React.FC = () => {
     keluhan: "",
     diagnosa: "",
     tindakan: "",
-    tanggal: new Date().toISOString().split("T")[0], // default hari ini
+    tanggal: new Date().toISOString().split("T")[0],
   });
 
   const [dokterList, setDokterList] = useState<Dokter[]>([]);
   const [pasienList, setPasienList] = useState<Pasien[]>([]);
+
+  const [namaPasien, setNamaPasien] = useState("");
+  const [namaDokter, setNamaDokter] = useState("");
+
+  const [showDropdownPasien, setShowDropdownPasien] = useState(false);
+  const [showDropdownDokter, setShowDropdownDokter] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:8000/dokter")
@@ -47,6 +53,20 @@ const TambahRekamMedis: React.FC = () => {
       .then((data) => setPasienList(data));
   }, []);
 
+  const filteredPasien =
+    namaPasien.trim() === ""
+      ? pasienList
+      : pasienList.filter((p) =>
+          p.nama.toLowerCase().includes(namaPasien.toLowerCase())
+        );
+
+  const filteredDokter =
+    namaDokter.trim() === ""
+      ? dokterList
+      : dokterList.filter((d) =>
+          d.nama.toLowerCase().includes(namaDokter.toLowerCase())
+        );
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -55,10 +75,33 @@ const TambahRekamMedis: React.FC = () => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]:
-        name === "pasien_id" || name === "dokter_id"
-          ? parseInt(value)
-          : value,
+      [name]: value,
+    }));
+  };
+
+  const handleNamaPasienChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNamaPasien(value);
+    setShowDropdownPasien(true);
+    const selected = pasienList.find(
+      (p) => p.nama.toLowerCase() === value.toLowerCase()
+    );
+    setForm((prev) => ({
+      ...prev,
+      pasien_id: selected ? selected.id : 0,
+    }));
+  };
+
+  const handleNamaDokterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNamaDokter(value);
+    setShowDropdownDokter(true);
+    const selected = dokterList.find(
+      (d) => d.nama.toLowerCase() === value.toLowerCase()
+    );
+    setForm((prev) => ({
+      ...prev,
+      dokter_id: selected ? selected.id : 0,
     }));
   };
 
@@ -71,10 +114,17 @@ const TambahRekamMedis: React.FC = () => {
       tindakan: "",
       tanggal: new Date().toISOString().split("T")[0],
     });
+    setNamaPasien("");
+    setNamaDokter("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!form.pasien_id || !form.dokter_id) {
+      alert("Pasien dan Dokter wajib dipilih.");
+      return;
+    }
 
     try {
       const response = await fetch("http://localhost:8000/rekam-medis/", {
@@ -118,42 +168,86 @@ const TambahRekamMedis: React.FC = () => {
             />
           </div>
 
-          {/* Pasien */}
-          <div>
+          {/* Pasien Autocomplete */}
+          <div className="relative">
             <label className="block font-medium">Pasien</label>
-            <select
-              name="pasien_id"
-              value={form.pasien_id}
-              onChange={handleChange}
-              className="border w-full px-3 py-2 rounded"
-              required
-            >
-              <option value="">Pilih Pasien</option>
-              {pasienList.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nama}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={namaPasien}
+                onChange={handleNamaPasienChange}
+                onFocus={() => setShowDropdownPasien(true)}
+                onBlur={() =>
+                  setTimeout(() => setShowDropdownPasien(false), 150)
+                }
+                className="border w-full px-3 py-2 rounded"
+                placeholder="Ketik nama pasien..."
+                required
+              />
+              
+            </div>
+            {showDropdownPasien && (
+              <ul className="absolute z-10 w-full bg-white border rounded shadow mt-1 max-h-40 overflow-y-auto">
+                {filteredPasien.length === 0 ? (
+                  <li className="px-3 py-2 text-red-500">❌ Tidak ditemukan</li>
+                ) : (
+                  filteredPasien.map((p) => (
+                    <li
+                      key={p.id}
+                      onClick={() => {
+                        setNamaPasien(p.nama);
+                        setForm((prev) => ({ ...prev, pasien_id: p.id }));
+                        setShowDropdownPasien(false);
+                      }}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {p.nama}
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
           </div>
 
-          {/* Dokter */}
-          <div>
+          {/* Dokter Autocomplete */}
+          <div className="relative">
             <label className="block font-medium">Dokter</label>
-            <select
-              name="dokter_id"
-              value={form.dokter_id}
-              onChange={handleChange}
-              className="border w-full px-3 py-2 rounded"
-              required
-            >
-              <option value="">Pilih Dokter</option>
-              {dokterList.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nama}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={namaDokter}
+                onChange={handleNamaDokterChange}
+                onFocus={() => setShowDropdownDokter(true)}
+                onBlur={() =>
+                  setTimeout(() => setShowDropdownDokter(false), 150)
+                }
+                className="border w-full px-3 py-2 rounded"
+                placeholder="Ketik nama dokter..."
+                required
+              />
+              
+            </div>
+            {showDropdownDokter && (
+              <ul className="absolute z-10 w-full bg-white border rounded shadow mt-1 max-h-40 overflow-y-auto">
+                {filteredDokter.length === 0 ? (
+                  <li className="px-3 py-2 text-red-500">❌ Tidak ditemukan</li>
+                ) : (
+                  filteredDokter.map((d) => (
+                    <li
+                      key={d.id}
+                      onClick={() => {
+                        setNamaDokter(d.nama);
+                        setForm((prev) => ({ ...prev, dokter_id: d.id }));
+                        setShowDropdownDokter(false);
+                      }}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {d.nama}
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
           </div>
 
           {/* Keluhan */}
@@ -198,7 +292,7 @@ const TambahRekamMedis: React.FC = () => {
             />
           </div>
 
-          {/* Tombol Aksi */}
+          {/* Tombol */}
           <div className="flex justify-end space-x-2 mt-4">
             <button
               type="button"

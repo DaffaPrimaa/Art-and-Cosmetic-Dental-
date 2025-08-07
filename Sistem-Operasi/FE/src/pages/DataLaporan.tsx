@@ -4,7 +4,7 @@ interface Laporan {
   tanggal: string;
   dokter: string;
   pasien: string;
-  keluhan: string;
+  tindakan: string; // 🔁 sebelumnya keluhan
 }
 
 const DataLaporan = () => {
@@ -82,7 +82,7 @@ const DataLaporan = () => {
               <th className="py-2 px-3 text-left">Tanggal</th>
               <th className="py-2 px-3 text-left">Dokter</th>
               <th className="py-2 px-3 text-left">Nama Pasien</th>
-              <th className="py-2 px-3 text-left">Keluhan</th>
+              <th className="py-2 px-3 text-left">Tindakan</th> {/* 🔁 */}
             </tr>
           </thead>
           <tbody>
@@ -102,7 +102,7 @@ const DataLaporan = () => {
                   <td className="py-2 px-3">{item.tanggal}</td>
                   <td className="py-2 px-3">{item.dokter}</td>
                   <td className="py-2 px-3">{item.pasien}</td>
-                  <td className="py-2 px-3">{item.keluhan}</td>
+                  <td className="py-2 px-3">{item.tindakan}</td> {/* 🔁 */}
                 </tr>
               ))
             )}

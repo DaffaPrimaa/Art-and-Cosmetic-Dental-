@@ -128,11 +128,11 @@ export default function TambahPasien() {
           <label className="block font-medium">Email</label>
           <input
             name="email"
-            type="email"
+            type="text" // <--- dari "email" jadi "text"
             value={formData.email}
             onChange={handleChange}
             className="w-full border p-2 rounded"
-            required
+            placeholder="Opsional, isi dengan email atau '-'"
           />
         </div>
 
