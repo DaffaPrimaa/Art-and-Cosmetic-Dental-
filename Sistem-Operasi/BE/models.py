@@ -43,8 +43,8 @@ class RekamMedis(Base):
     diagnosa = Column(String)
     tindakan = Column(String)
 
-    biaya_dokter = Column(Integer, default=0)
     biaya_tindakan = Column(Integer, default=0)
+    biaya_bahan = Column(Integer, default=0)
     biaya_obat = Column(Integer, default=0)
 
     # Relasi ke Pasien dan Dokter

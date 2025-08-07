@@ -9,8 +9,8 @@ interface RekamMedis {
   dokter: string;
   diagnosa: string;
   tindakan: string;
-  biaya_dokter?: number;
-  biaya_tindakan?: number;
+  biaya_tindakan?: number; // ← sebelumnya biaya_dokter
+  biaya_bahan?: number;    // ← sebelumnya biaya_tindakan
   biaya_obat?: number;
   total_biaya?: number;
 }
@@ -22,8 +22,8 @@ const DetailRekamMedis = () => {
   const [data, setData] = useState<RekamMedis | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [biayaDokter, setBiayaDokter] = useState("");
   const [biayaTindakan, setBiayaTindakan] = useState("");
+  const [biayaBahan, setBiayaBahan] = useState("");
   const [biayaObat, setBiayaObat] = useState("");
 
   const [showNotif, setShowNotif] = useState(false);
@@ -38,8 +38,8 @@ const DetailRekamMedis = () => {
   };
 
   const totalBiaya =
-    parseNumber(biayaDokter) +
     parseNumber(biayaTindakan) +
+    parseNumber(biayaBahan) +
     parseNumber(biayaObat);
 
   useEffect(() => {
@@ -50,10 +50,12 @@ const DetailRekamMedis = () => {
         const result = await res.json();
         setData(result);
 
-        if (result.biaya_dokter) setBiayaDokter(result.biaya_dokter.toString());
         if (result.biaya_tindakan)
           setBiayaTindakan(result.biaya_tindakan.toString());
-        if (result.biaya_obat) setBiayaObat(result.biaya_obat.toString());
+        if (result.biaya_bahan)
+          setBiayaBahan(result.biaya_bahan.toString());
+        if (result.biaya_obat)
+          setBiayaObat(result.biaya_obat.toString());
       } catch (err) {
         console.error(err);
         alert("Gagal mengambil data rekam medis");
@@ -81,8 +83,8 @@ const DetailRekamMedis = () => {
     if (!id) return;
 
     const payload = {
-      biaya_dokter: parseNumber(biayaDokter),
       biaya_tindakan: parseNumber(biayaTindakan),
+      biaya_bahan: parseNumber(biayaBahan),
       biaya_obat: parseNumber(biayaObat),
       total_biaya: totalBiaya,
     };
@@ -96,7 +98,6 @@ const DetailRekamMedis = () => {
 
       if (!res.ok) throw new Error("Gagal menyimpan data");
 
-      // ✅ Tampilkan notifikasi & redirect
       setShowNotif(true);
       setTimeout(() => {
         setShowNotif(false);
@@ -124,7 +125,7 @@ const DetailRekamMedis = () => {
       {/* Area Cetak */}
       <div id="printArea" className="space-y-6">
         <div className="bg-white rounded shadow p-6 print:shadow-none print:border print:rounded-none print:p-0 print:mt-0 print:text-black">
-          {/* Header Klinik - hanya muncul saat print */}
+          {/* Header Klinik */}
           <div className="hidden print:block border-b pb-4 mb-4">
             <h1 className="text-2xl font-bold text-center">
               Art and Cosmetic Dental Clinic
@@ -175,24 +176,8 @@ const DetailRekamMedis = () => {
             </div>
           </div>
 
-          {/* Rincian Biaya - input disembunyikan saat print */}
+          {/* Rincian Biaya */}
           <div className="grid grid-cols-1 gap-4 mt-6 text-sm print:px-6 print:mt-8">
-            <div className="flex items-center gap-2 print:gap-4">
-              <label className="font-semibold w-40 print:w-48">
-                Biaya Dokter:
-              </label>
-              <input
-                type="text"
-                className="border rounded px-2 py-1 w-full print:hidden"
-                value={formatNumber(biayaDokter)}
-                onChange={(e) =>
-                  setBiayaDokter(parseNumber(e.target.value).toString())
-                }
-              />
-              <span className="hidden print:block">
-                Rp {formatNumber(biayaDokter)}
-              </span>
-            </div>
             <div className="flex items-center gap-2 print:gap-4">
               <label className="font-semibold w-40 print:w-48">
                 Biaya Tindakan:
@@ -207,6 +192,22 @@ const DetailRekamMedis = () => {
               />
               <span className="hidden print:block">
                 Rp {formatNumber(biayaTindakan)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 print:gap-4">
+              <label className="font-semibold w-40 print:w-48">
+                Biaya Bahan:
+              </label>
+              <input
+                type="text"
+                className="border rounded px-2 py-1 w-full print:hidden"
+                value={formatNumber(biayaBahan)}
+                onChange={(e) =>
+                  setBiayaBahan(parseNumber(e.target.value).toString())
+                }
+              />
+              <span className="hidden print:block">
+                Rp {formatNumber(biayaBahan)}
               </span>
             </div>
             <div className="flex items-center gap-2 print:gap-4">
@@ -235,7 +236,7 @@ const DetailRekamMedis = () => {
             </div>
           </div>
 
-          {/* Footer untuk tanda tangan - hanya saat print */}
+          {/* Tanda Tangan */}
           <div className="hidden print:flex justify-between mt-12 px-6">
             <div className="text-center">
               <p className="mb-16">Petugas Klinik</p>

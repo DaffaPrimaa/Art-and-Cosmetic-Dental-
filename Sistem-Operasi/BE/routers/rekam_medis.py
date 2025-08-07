@@ -21,8 +21,8 @@ def get_rekam_medis(db: Session = Depends(get_db)):
             "dokter": r.dokter.nama if r.dokter else None,
             "diagnosa": r.diagnosa,
             "tindakan": r.tindakan,
-            "biaya_dokter": r.biaya_dokter,
-            "biaya_tindakan": r.biaya_tindakan,
+            "biaya_tindakan": r.biaya_tindakan,  # ← sebelumnya biaya_dokter
+            "biaya_bahan": r.biaya_bahan,        # ← sebelumnya biaya_tindakan
             "biaya_obat": r.biaya_obat,
         })
     return result
@@ -45,8 +45,8 @@ def create_rekam_medis(data: RekamMedisBase, db: Session = Depends(get_db)):
         diagnosa=data.diagnosa,
         tindakan=data.tindakan,
         tanggal=data.tanggal or date.today(),
-        biaya_dokter=data.biaya_dokter,
-        biaya_tindakan=data.biaya_tindakan,
+        biaya_tindakan=data.biaya_tindakan,  # ← sebelumnya biaya_dokter
+        biaya_bahan=data.biaya_bahan,        # ← sebelumnya biaya_tindakan
         biaya_obat=data.biaya_obat,
     )
 
@@ -82,8 +82,8 @@ def get_rekam_medis_by_id(id: int, db: Session = Depends(get_db)):
         "dokter_id": rekam.dokter_id,
         "diagnosa": rekam.diagnosa,
         "tindakan": rekam.tindakan,
-        "biaya_dokter": rekam.biaya_dokter,
-        "biaya_tindakan": rekam.biaya_tindakan,
+        "biaya_tindakan": rekam.biaya_tindakan,  # ← sebelumnya biaya_dokter
+        "biaya_bahan": rekam.biaya_bahan,        # ← sebelumnya biaya_tindakan
         "biaya_obat": rekam.biaya_obat,
     }
 
@@ -99,8 +99,8 @@ def update_rekam_medis(id: int, data: dict, db: Session = Depends(get_db)):
     rekam.diagnosa = data.get("diagnosa", rekam.diagnosa)
     rekam.tindakan = data.get("tindakan", rekam.tindakan)
 
-    rekam.biaya_dokter = data.get("biaya_dokter", rekam.biaya_dokter)
-    rekam.biaya_tindakan = data.get("biaya_tindakan", rekam.biaya_tindakan)
+    rekam.biaya_tindakan = data.get("biaya_tindakan", rekam.biaya_tindakan)  # ← biaya_dokter → biaya_tindakan
+    rekam.biaya_bahan = data.get("biaya_bahan", rekam.biaya_bahan)            # ← biaya_tindakan → biaya_bahan
     rekam.biaya_obat = data.get("biaya_obat", rekam.biaya_obat)
 
     if "pasien_id" in data:

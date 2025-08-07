@@ -6,7 +6,7 @@ from datetime import date
 class PasienBase(BaseModel):
     nama: str
     gender: str
-    email: EmailStr
+    email: str
     alamat: str
     telp: str
 
@@ -26,7 +26,7 @@ class PasienOut(PasienBase):
 class DokterBase(BaseModel):
     nama: str
     spesialis: str
-    email: EmailStr
+    email: str
     telp: str
     alamat: str
 
@@ -50,8 +50,8 @@ class RekamMedisBase(BaseModel):
     diagnosa: str
     tindakan: str
     tanggal: date | None = None
-    biaya_dokter: int = 0
     biaya_tindakan: int = 0
+    biaya_bahan: int = 0
     biaya_obat: int = 0
 
 class RekamMedisCreate(RekamMedisBase):
