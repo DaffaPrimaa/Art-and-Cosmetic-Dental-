@@ -46,6 +46,7 @@ class RekamMedis(Base):
     biaya_tindakan = Column(Integer, default=0)
     biaya_bahan = Column(Integer, default=0)
     biaya_obat = Column(Integer, default=0)
+    total_biaya = Column(Integer, default=0)
 
     # Relasi ke Pasien dan Dokter
     pasien = relationship("Pasien", back_populates="rekam_medis")

@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { ChevronDown, Check } from "lucide-react";
+import jsPDF from "jspdf"; // Pastikan sudah di-import
 
 interface RekamMedis {
   pasien: string;
@@ -112,31 +113,166 @@ const DetailRekamMedis = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.select-container')) {
+      if (!target.closest(".select-container")) {
         setIsDropdownOpen(false);
       }
     };
 
     if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isDropdownOpen]);
+  
+  // =================================================================
+  // == FUNGSI PDF DENGAN FONT MIX (Besar di Header/Total, Kecil di rincian) ==
+  // =================================================================
+  const handleGeneratePdf = () => {
+    if (!data) return;
 
-  const handlePrint = () => {
-    const printContents = document.getElementById("printArea")?.innerHTML;
-    const originalContents = document.body.innerHTML;
+    const doc = new jsPDF("portrait", "mm", [57, 150]); 
+    const margin = 3; 
+    const docWidth = doc.internal.pageSize.getWidth();
+    let y = 10; 
+    const lineHeight = 4.5; // Kembalikan line height normal
+    const smallLineHeight = 4; // Line height untuk font kecil
+    const divider = "------------------------------------"; // Disesuaikan sedikit
 
-    if (printContents) {
-      document.body.innerHTML = printContents;
-      window.print();
-      document.body.innerHTML = originalContents;
-      window.location.reload();
-    }
+    doc.setFont("Courier", "normal");
+    
+    // === HEADER KLINIK (Ukuran BESAR) ===
+    doc.setFont("Courier", "bold");
+    doc.setFontSize(11); // 👈 Ukuran font BESAR
+    doc.text("Art & Cosmetic", docWidth / 2, y, { align: "center" });
+    y += lineHeight;
+    doc.text("Dental Clinic", docWidth / 2, y, { align: "center" });
+    y += lineHeight;
+    
+    doc.setFont("Courier", "normal");
+    doc.setFontSize(9); // 👈 Ukuran font BESAR (level 2)
+    doc.text("Jl. Pasir Salam Asri No.7B", docWidth / 2, y, { align: "center" });
+    y += lineHeight;
+    doc.text("Regol - Bandung", docWidth / 2, y, { align: "center" });
+    y += lineHeight;
+    doc.text("0813 1564 1765", docWidth / 2, y, { align: "center" });
+    y += 5; // Spasi ekstra
+
+    // === GARIS PEMISAH (Ukuran KECIL) ===
+    doc.setFontSize(7); // 👈 Ukuran font KECIL
+    doc.text(divider, docWidth / 2, y, { align: "center" });
+    y += 4;
+
+    // === INFO PASIEN (Ukuran KECIL) ===
+    doc.setFontSize(8); // 👈 Ukuran font KECIL
+    doc.setFont("Courier", "normal");
+    
+    const printRow = (label: string, value: string) => {
+      const valueX = 18; 
+      const maxWidth = docWidth - valueX - margin;
+      
+      const textLines = doc.splitTextToSize(value, maxWidth);
+      
+      doc.text(label, margin, y);
+      doc.text(`: ${textLines[0]}`, valueX, y);
+      
+      if (textLines.length > 1) {
+        for (let i = 1; i < textLines.length; i++) {
+          y += smallLineHeight; // Pakai line height kecil
+          doc.text(textLines[i], valueX + 2, y); 
+        }
+      }
+      y += smallLineHeight; // Pakai line height kecil
+    };
+
+    printRow("Tanggal", data.tanggal);
+    printRow("Pasien", data.pasien);
+    printRow("Dokter", data.dokter);
+    y += 3; 
+
+    // === GARIS PEMISAH (Ukuran KECIL) ===
+    doc.setFontSize(7); // 👈 Ukuran font KECIL
+    doc.text(divider, docWidth / 2, y, { align: "center" });
+    y += 4;
+    
+    // === DETAIL TINDAKAN (Ukuran KECIL) ===
+    doc.setFontSize(8); // 👈 Ukuran font KECIL
+    doc.setFont("Courier", "normal");
+    printRow("Keluhan", data.keluhan);
+    printRow("Diagnosa", data.diagnosa);
+    printRow("Tindakan", data.tindakan);
+    const sBahan = selectedBahan.length > 0 ? selectedBahan.join(", ") : "-";
+    printRow("Bahan", sBahan);
+    y += 3;
+
+    // === GARIS PEMISAH (Ukuran KECIL) ===
+    doc.setFontSize(7); // 👈 Ukuran font KECIL
+    doc.text(divider, docWidth / 2, y, { align: "center" });
+    y += 4;
+
+    // === RINCIAN BIAYA (Ukuran KECIL) ===
+    doc.setFontSize(8); // 👈 Ukuran font KECIL
+    doc.setFont("Courier", "normal");
+    
+    const printCost = (label: string, value: string) => {
+      const valueString = `Rp ${formatNumber(value)}`;
+      doc.text(label, margin, y);
+      doc.text(valueString, docWidth - margin, y, { align: "right" });
+      y += smallLineHeight; // Pakai line height kecil
+    };
+
+    printCost("Biaya Tindakan", biayaTindakan);
+    printCost("Biaya Bahan", biayaBahan);
+    printCost("Biaya Obat", biayaObat);
+    y += 3;
+
+    // === GARIS PEMISAH (Ukuran KECIL) ===
+    doc.setFontSize(7); // 👈 Ukuran font KECIL
+    doc.text(divider, docWidth / 2, y, { align: "center" });
+    y += 5; // Spasi ekstra sebelum total
+
+    // === TOTAL (Ukuran BESAR) ===
+    doc.setFont("Courier", "bold");
+    doc.setFontSize(11); // 👈 Ukuran font BESAR
+    doc.text("TOTAL:", margin, y);
+    const totalString = `Rp ${formatNumber(totalBiaya)}`;
+    doc.text(totalString, docWidth - margin, y, { align: "right" });
+    y += 5; // Spasi ekstra
+
+    // === GARIS PEMISAH (Ukuran KECIL) ===
+    doc.setFontSize(7); // 👈 Ukuran font KECIL
+    doc.setFont("Courier", "normal");
+    doc.text(divider, docWidth / 2, y, { align: "center" });
+    y += 4;
+
+    // === FOOTER (Ukuran KECIL) ===
+    doc.setFontSize(7); // 👈 Ukuran font KECIL
+    doc.text("Terima kasih atas kunjungannya", docWidth / 2, y, { align: "center" });
+
+
+    // =======================================================
+    // 👇 PERUBAHAN DI SINI: Atur Judul/Nama File PDF
+    // =======================================================
+    
+    // Ganti '/' dengan '-' agar aman untuk nama file
+    const safeTanggal = data.tanggal.replace(/\//g, '-');
+    const docTitle = `${data.pasien} || ${safeTanggal}`;
+    
+    // Set judul PDF. Saat dibuka di tab baru, ini akan jadi judul tab.
+    // Saat disimpan (Save As), browser BIASANYA akan menyarankan nama ini.
+    doc.setProperties({
+      title: docTitle
+    });
+
+    // Buka PDF di tab baru
+    doc.output("dataurlnewwindow");
   };
+  // =================================================================
+  // == AKHIR DARI FUNGSI PDF BARU ==
+  // =================================================================
+
 
   const handleSave = async () => {
     if (!id) return;
@@ -174,7 +310,7 @@ const DetailRekamMedis = () => {
 
   return (
     <div className="mt-6 space-y-6">
-      {/* ✅ Notifikasi berhasil */}
+      {/* ... (Kode Notifikasi tidak berubah) ... */}
       {showNotif && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-700 px-6 py-3 rounded-lg shadow-md flex items-center gap-2 z-50 animate-bounce">
           <FaCheckCircle className="text-green-600" />
@@ -182,29 +318,15 @@ const DetailRekamMedis = () => {
         </div>
       )}
 
-      {/* Area Cetak */}
+      {/* Area ini tetap ada untuk tampilan di web */}
       <div id="printArea" className="space-y-6">
-        <div className="bg-white rounded shadow p-6 print:shadow-none print:border print:rounded-none print:p-0 print:mt-0 print:text-black">
-          {/* Header Klinik */}
-          <div className="hidden print:block border-b pb-4 mb-4">
-            <h1 className="text-2xl font-bold text-center">
-              Art and Cosmetic Dental Clinic
-            </h1>
-            <p className="text-center text-sm">
-              Jl. Pasir Salam Asri No.7B Blok D, Pasirluyu, Kec. Regol, Kota
-              Bandung, Jawa Barat 40254
-            </p>
-            <p className="text-center text-sm">
-              artandcosmeticdentalclinic@gmail.com
-            </p>
-            <p className="text-center text-sm">0813 1564 1765</p>
-          </div>
-
-          <h2 className="text-xl font-bold mb-6 print:text-center print:underline print:mb-4">
+        <div className="bg-white rounded shadow p-6">
+          <h2 className="text-xl font-bold mb-6">
             Invoice Pembayaran Pasien
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12 text-sm print:text-sm print:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12 text-sm">
+            {/* ... (Info Pasien tidak berubah) ... */}
             <div>
               <p className="mb-2">
                 <span className="font-semibold">Tanggal Periksa:</span>{" "}
@@ -219,7 +341,6 @@ const DetailRekamMedis = () => {
                 <span className="text-gray-700">{data.dokter}</span>
               </p>
             </div>
-
             <div>
               <p className="mb-2">
                 <span className="font-semibold">Keluhan Pasien:</span>{" "}
@@ -235,15 +356,14 @@ const DetailRekamMedis = () => {
               </p>
             </div>
           </div>
-
-          {/* 🔹 Penggunaan Bahan dengan Dropdown Kustom */}
-          <div className="grid grid-cols-1 gap-4 mt-6 text-sm print:px-6">
-            <div className="flex items-start gap-2 print:gap-4">
-              <label className="font-semibold w-40 print:w-48 mt-2">
+          
+          {/* ... (Dropdown Bahan tidak berubah) ... */}
+          <div className="grid grid-cols-1 gap-4 mt-6 text-sm">
+            <div className="flex items-start gap-2">
+              <label className="font-semibold w-40 mt-2">
                 Penggunaan Bahan:
               </label>
-              
-              <div className="relative w-full print:hidden select-container">
+              <div className="relative w-full select-container">
                 <button
                   type="button"
                   className="relative py-3 ps-4 pe-9 flex gap-x-2 text-nowrap w-full cursor-pointer bg-white border border-gray-200 rounded-lg text-start text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-300 transition-colors"
@@ -252,11 +372,11 @@ const DetailRekamMedis = () => {
                 >
                   <div className="flex flex-wrap gap-1 w-full">
                     {selectedBahan.length === 0 ? (
-                      <span className="text-gray-500">Pilih bahan yang digunakan...</span>
+                      <span className="text-gray-500">Pilih bahan...</span>
                     ) : (
                       selectedBahan.map((bahan, index) => (
-                        <span 
-                          key={index} 
+                        <span
+                          key={index}
                           className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full border border-blue-200"
                         >
                           {bahan}
@@ -265,110 +385,67 @@ const DetailRekamMedis = () => {
                     )}
                   </div>
                   <div className="absolute top-1/2 end-3 -translate-y-1/2">
-                    <ChevronDown 
-                      className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 ${
-                        isDropdownOpen ? 'rotate-180' : ''
-                      }`} 
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-gray-500 ${isDropdownOpen ? "rotate-180" : ""}`}
                     />
                   </div>
                 </button>
-
                 {isDropdownOpen && (
-                  <div className="absolute mt-2 z-50 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden overflow-y-auto shadow-lg ring-1 ring-black ring-opacity-5">
-                    {listBahan.map((bahan) => (
+                  <div className="absolute mt-2 z-50 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden overflow-y-auto shadow-lg">
+                    {listBahan.map(bahan => (
                       <div
                         key={bahan.id}
-                        className="py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 transition-colors"
+                        className="py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg"
                         onClick={() => handleBahanSelect(bahan.nama)}
                       >
                         <div className="flex justify-between items-center w-full">
                           <span className="font-medium">{bahan.nama}</span>
-                          <span className={`transition-opacity ${selectedBahan.includes(bahan.nama) ? 'opacity-100' : 'opacity-0'}`}>
+                          <span className={`${selectedBahan.includes(bahan.nama) ? "opacity-100" : "opacity-0"}`}>
                             <Check className="w-3.5 h-3.5 text-blue-600" />
                           </span>
                         </div>
                       </div>
                     ))}
-                    {listBahan.length === 0 && (
-                      <div className="py-2 px-4 text-sm text-gray-500">
-                        Tidak ada bahan tersedia
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
-
-              <span className="hidden print:block">
-                {selectedBahan.join(", ")}
-              </span>
             </div>
           </div>
-
-          {/* Rincian Biaya */}
-          <div className="grid grid-cols-1 gap-4 mt-6 text-sm print:px-6">
-            <div className="flex items-center gap-2 print:gap-4">
-              <label className="font-semibold w-40 print:w-48">
-                Biaya Tindakan:
-              </label>
+          
+          {/* ... (Rincian Biaya tidak berubah) ... */}
+          <div className="grid grid-cols-1 gap-4 mt-6 text-sm">
+            <div className="flex items-center gap-2">
+              <label className="font-semibold w-40">Biaya Tindakan:</label>
               <input
                 type="text"
-                className="border rounded px-2 py-1 w-full print:hidden"
+                className="border rounded px-2 py-1 w-full"
                 value={formatNumber(biayaTindakan)}
-                onChange={(e) =>
-                  setBiayaTindakan(parseNumber(e.target.value).toString())
-                }
+                onChange={e => setBiayaTindakan(parseNumber(e.target.value).toString())}
               />
-              <span className="hidden print:block">
-                Rp {formatNumber(biayaTindakan)}
-              </span>
             </div>
-            <div className="flex items-center gap-2 print:gap-4">
-              <label className="font-semibold w-40 print:w-48">
-                Biaya Bahan:
-              </label>
+            <div className="flex items-center gap-2">
+              <label className="font-semibold w-40">Biaya Bahan:</label>
               <input
                 type="text"
-                className="border rounded px-2 py-1 w-full print:hidden"
+                className="border rounded px-2 py-1 w-full"
                 value={formatNumber(biayaBahan)}
-                onChange={(e) =>
-                  setBiayaBahan(parseNumber(e.target.value).toString())
-                }
+                onChange={e => setBiayaBahan(parseNumber(e.target.value).toString())}
               />
-              <span className="hidden print:block">
-                Rp {formatNumber(biayaBahan)}
-              </span>
             </div>
-            <div className="flex items-center gap-2 print:gap-4">
-              <label className="font-semibold w-40 print:w-48">
-                Biaya Obat:
-              </label>
+            <div className="flex items-center gap-2">
+              <label className="font-semibold w-40">Biaya Obat:</label>
               <input
                 type="text"
-                className="border rounded px-2 py-1 w-full print:hidden"
+                className="border rounded px-2 py-1 w-full"
                 value={formatNumber(biayaObat)}
-                onChange={(e) =>
-                  setBiayaObat(parseNumber(e.target.value).toString())
-                }
+                onChange={e => setBiayaObat(parseNumber(e.target.value).toString())}
               />
-              <span className="hidden print:block">
-                Rp {formatNumber(biayaObat)}
-              </span>
             </div>
-            <div className="flex items-center gap-2 print:gap-4">
-              <label className="font-semibold w-40 print:w-48">
-                Total Biaya:
-              </label>
+            <div className="flex items-center gap-2">
+              <label className="font-semibold w-40">Total Biaya:</label>
               <span className="text-gray-700 font-semibold">
                 Rp {formatNumber(totalBiaya)}
               </span>
-            </div>
-          </div>
-
-          {/* Tanda Tangan */}
-          <div className="hidden print:flex justify-between mt-12 px-6">
-            <div className="text-center">
-              <p className="mb-16">Petugas Klinik</p>
-              <p className="border-t border-black w-40 mx-auto"></p>
             </div>
           </div>
         </div>
@@ -389,7 +466,7 @@ const DetailRekamMedis = () => {
           Simpan
         </button>
         <button
-          onClick={handlePrint}
+          onClick={handleGeneratePdf} // Tetap panggil fungsi PDF
           className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
         >
           Cetak
