@@ -2,6 +2,7 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date
 
+
 # ==== PASIEN ====
 class PasienBase(BaseModel):
     nama: str
@@ -53,6 +54,7 @@ class RekamMedisBase(BaseModel):
     biaya_tindakan: int = 0
     biaya_bahan: int = 0
     biaya_obat: int = 0
+    total_biaya: int | None = None
 
 class RekamMedisCreate(RekamMedisBase):
     pass

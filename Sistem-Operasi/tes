@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ "$1" == "transfer" ]; then
+    for file in web-server-*.log; do
+        date=$(echo $file | cut -d'-' -f3-5 | sed 's/.log//')
+        date_api=$(echo $date | sed 's/-//g')
+        new_file="web-server-${date}-data.log"
+        echo "[${date}] user access web server /api${date_api}" > "$new_file"
+        echo "File $file has been processed into $new_file"
+    done
+
+elif [ "$1" == "file" ]; then
+    month=$(printf "%02d" $2)
+    echo "Files in month $month:"
+    grep -l "\-${month}-" web-server-*.log 2>/dev/null || echo "(No file found)"
+
+elif [ "$1" == "data" ]; then
+    keyword="$2"
+    echo "Searching for string \"$keyword\":"
+    grep -r "$keyword" *.log 2>/dev/null || echo "(No data found)"
+
+else
+    echo "Usage:"
+    echo "  bash script.sh transfer       # Transfer files"
+    echo "  bash script.sh file <month>   # Search files by month"
+    echo "  bash script.sh data <string>  # Search data in all files"
+fi

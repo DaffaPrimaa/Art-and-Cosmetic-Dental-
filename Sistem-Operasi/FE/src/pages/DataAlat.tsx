@@ -14,25 +14,31 @@ export interface Alat {
 export default function DataAlat() {
   const navigate = useNavigate();
   const [alat, setAlat] = useState<Alat[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [entriesPerPage, setEntriesPerPage] = useState(5);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [entriesPerPage, setEntriesPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch dari backend
+  // Ambil data alat dari backend
+  const fetchAlat = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/alat");
+      if (!res.ok) throw new Error("Gagal fetch data alat");
+      const data = await res.json();
+      setAlat(data);
+    } catch (err) {
+      console.error("Gagal memuat data:", err);
+      Swal.fire("Gagal", "Tidak dapat memuat data alat/obat.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetch("http://localhost:8000/alat")
-      .then((res) => {
-        if (!res.ok) throw new Error("Gagal fetch data alat");
-        return res.json();
-      })
-      .then((data: Alat[]) => setAlat(data))
-      .catch((err) => {
-        console.error("Gagal memuat data:", err);
-        alert("Gagal memuat data alat");
-      });
+    fetchAlat();
   }, []);
 
-  // Hapus dari backend
+  // Hapus alat dari backend
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
       title: "Yakin ingin menghapus?",
@@ -51,11 +57,8 @@ export default function DataAlat() {
       const res = await fetch(`http://localhost:8000/alat/${id}`, {
         method: "DELETE",
       });
-
-      if (!res.ok) throw new Error("Gagal menghapus");
-
-      setAlat((prev) => prev.filter((item) => item.id !== id));
-
+      if (!res.ok) throw new Error("Gagal hapus alat");
+      setAlat((prev) => prev.filter((a) => a.id !== id));
       Swal.fire({
         title: "Terhapus!",
         text: "Data alat/obat berhasil dihapus.",
@@ -69,168 +72,173 @@ export default function DataAlat() {
     }
   };
 
+  // Filter dan pagination
   const filteredAlat = alat.filter((a) =>
-    Object.values(a).some((value) =>
-      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    Object.values(a).some((v) =>
+      String(v).toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
-  const indexOfLastEntry = currentPage * entriesPerPage;
-  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredAlat.slice(
-    indexOfFirstEntry,
-    indexOfLastEntry
-  );
+  const indexOfLast = currentPage * entriesPerPage;
+  const indexOfFirst = indexOfLast - entriesPerPage;
+  const currentEntries = filteredAlat.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredAlat.length / entriesPerPage);
-
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="mt-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">💊 Data Alat / Obat</h2>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-2xl font-semibold text-[#0B2C5F] flex items-center gap-2">
+          💊 Data Alat / Obat
+        </h2>
         <button
           onClick={() => navigate("/alat/tambah")}
-          className="bg-[#3EC6D3] text-white px-3 py-1 rounded hover:bg-[#2BB6C0] transition-colors"
+          className="bg-[#0B2C5F] text-white px-4 py-2 rounded-lg hover:bg-[#153a73] transition"
         >
           + Tambah Data
         </button>
       </div>
 
-      <div className="bg-white shadow-md rounded p-4">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-2">
-            <span>Show</span>
+      {/* Kontainer utama */}
+      <div className="bg-white shadow-lg rounded-xl p-5 border border-gray-100">
+        {/* Filter Section */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
+          <div className="flex items-center gap-2 text-sm">
+            <span>Tampilkan</span>
             <select
-              className="border rounded px-2 py-1"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
+              className="border rounded-md px-2 py-1 focus:ring-[#0B2C5F] focus:border-[#0B2C5F]"
             >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
+              {[5, 10, 25, 50].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
             </select>
-            <span>entries</span>
+            <span>data</span>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <label htmlFor="search" className="font-semibold">
-              Search:
+          <div className="flex items-center gap-2 text-sm">
+            <label htmlFor="search" className="font-medium">
+              Cari:
             </label>
             <input
-              type="text"
               id="search"
-              className="border rounded px-3 py-1 focus:ring-blue-500 focus:border-blue-500"
+              type="text"
+              placeholder="Ketik nama / keterangan..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
+              className="border rounded-md px-3 py-1 focus:ring-[#0B2C5F] focus:border-[#0B2C5F]"
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-left border-collapse">
-            <thead className="bg-[#0B2C5F] text-white">
-              <tr>
-                <th className="py-2 px-3 font-semibold text-center rounded-tl-md">
-                  No
-                </th>
-                <th className="py-2 px-3 font-semibold">Nama Obat</th>
-                <th className="py-2 px-3 font-semibold">Jumlah</th>
-                <th className="py-2 px-3 font-semibold">Harga</th>
-                <th className="py-2 px-3 font-semibold">Keterangan</th>
-                <th className="py-2 px-3 font-semibold text-center rounded-tr-md">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentEntries.length === 0 ? (
+        {/* Tabel Data */}
+        {loading ? (
+          <p className="text-center text-gray-500 py-6">⏳ Memuat data...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+              <thead className="bg-[#0B2C5F] text-white text-left">
                 <tr>
-                  <td
-                    className="py-4 px-3 text-center text-gray-500"
-                    colSpan={6}
-                  >
-                    Tidak ada data alat / obat
-                  </td>
+                  <th className="py-3 px-4 font-medium">No</th>
+                  <th className="py-3 px-4 font-medium">Nama Alat / Obat</th>
+                  <th className="py-3 px-4 font-medium">Jumlah</th>
+                  <th className="py-3 px-4 font-medium">Harga</th>
+                  <th className="py-3 px-4 font-medium">Keterangan</th>
+                  <th className="py-3 px-4 font-medium text-center">Aksi</th>
                 </tr>
-              ) : (
-                currentEntries.map((a, i) => (
-                  <tr
-                    key={a.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="py-2 px-3 text-center">
-                      {indexOfFirstEntry + i + 1}.
-                    </td>
-                    <td className="py-2 px-3">{a.nama}</td>
-                    <td className="py-2 px-3">{a.jumlah}</td>
-                    <td className="py-2 px-3">
-                      Rp {a.harga.toLocaleString("id-ID")},00
-                    </td>
-                    <td className="py-2 px-3">{a.keterangan}</td>
-                    <td className="py-2 px-3 flex justify-center items-center space-x-2">
-                      <button
-                        className="text-yellow-500 hover:text-yellow-600 transition-colors p-1 rounded-full bg-yellow-100 hover:bg-yellow-200"
-                        onClick={() => navigate(`/alat/edit/${a.id}`)}
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        className="text-red-500 hover:text-red-600 transition-colors p-1 rounded-full bg-red-100 hover:bg-red-200"
-                        onClick={() => handleDelete(a.id)}
-                      >
-                        <FaTrash />
-                      </button>
+              </thead>
+              <tbody>
+                {currentEntries.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-6 text-gray-500">
+                      Tidak ada data alat / obat
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex justify-between items-center mt-4">
-          <div className="text-gray-600">
-            Showing {indexOfFirstEntry + 1} to{" "}
-            {Math.min(indexOfLastEntry, filteredAlat.length)} of{" "}
-            {filteredAlat.length} entries
+                ) : (
+                  currentEntries.map((a, i) => (
+                    <tr
+                      key={a.id}
+                      className="border-b border-gray-100 hover:bg-gray-50 transition"
+                    >
+                      <td className="py-3 px-4">{indexOfFirst + i + 1}</td>
+                      <td className="py-3 px-4 font-medium">{a.nama}</td>
+                      <td className="py-3 px-4">{a.jumlah}</td>
+                      <td className="py-3 px-4">
+                        Rp {a.harga.toLocaleString("id-ID")},00
+                      </td>
+                      <td className="py-3 px-4">{a.keterangan}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex justify-center gap-3">
+                          <button
+                            onClick={() => navigate(`/alat/edit/${a.id}`)}
+                            className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"
+                            title="Edit Data"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(a.id)}
+                            className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200 transition"
+                            title="Hapus Data"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-          <nav className="flex space-x-1">
+        )}
+
+        {/* Pagination */}
+        <div className="flex flex-col md:flex-row justify-between items-center mt-6 text-sm gap-3">
+          <div className="text-gray-600">
+            Menampilkan {indexOfFirst + 1} -{" "}
+            {Math.min(indexOfLast, filteredAlat.length)} dari{" "}
+            {filteredAlat.length} data
+          </div>
+
+          <div className="flex gap-1 flex-wrap">
             <button
-              onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1 border rounded text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="px-3 py-1.5 border rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
             >
-              Previous
+              Prev
             </button>
-            {[...Array(totalPages)].map((_, index) => (
+            {[...Array(totalPages)].map((_, idx) => (
               <button
-                key={index}
-                onClick={() => paginate(index + 1)}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === index + 1
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                key={idx}
+                onClick={() => setCurrentPage(idx + 1)}
+                className={`px-3 py-1.5 border rounded-md transition ${
+                  currentPage === idx + 1
+                    ? "bg-[#0B2C5F] text-white"
+                    : "bg-gray-100 hover:bg-gray-200"
                 }`}
               >
-                {index + 1}
+                {idx + 1}
               </button>
             ))}
             <button
-              onClick={() => paginate(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="px-3 py-1.5 border rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
             >
               Next
             </button>
-          </nav>
+          </div>
         </div>
       </div>
     </div>

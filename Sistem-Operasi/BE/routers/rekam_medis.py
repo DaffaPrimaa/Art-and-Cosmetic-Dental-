@@ -21,9 +21,10 @@ def get_rekam_medis(db: Session = Depends(get_db)):
             "dokter": r.dokter.nama if r.dokter else None,
             "diagnosa": r.diagnosa,
             "tindakan": r.tindakan,
-            "biaya_tindakan": r.biaya_tindakan,  # ← sebelumnya biaya_dokter
-            "biaya_bahan": r.biaya_bahan,        # ← sebelumnya biaya_tindakan
+            "biaya_tindakan": r.biaya_tindakan,
+            "biaya_bahan": r.biaya_bahan,
             "biaya_obat": r.biaya_obat,
+            "total_biaya": r.total_biaya,
         })
     return result
 
@@ -38,6 +39,8 @@ def create_rekam_medis(data: RekamMedisBase, db: Session = Depends(get_db)):
     if not dokter:
         raise HTTPException(status_code=404, detail="Dokter tidak ditemukan")
 
+    total = data.biaya_tindakan + data.biaya_bahan + data.biaya_obat
+
     rekam = RekamMedis(
         pasien_id=data.pasien_id,
         dokter_id=data.dokter_id,
@@ -45,9 +48,10 @@ def create_rekam_medis(data: RekamMedisBase, db: Session = Depends(get_db)):
         diagnosa=data.diagnosa,
         tindakan=data.tindakan,
         tanggal=data.tanggal or date.today(),
-        biaya_tindakan=data.biaya_tindakan,  # ← sebelumnya biaya_dokter
-        biaya_bahan=data.biaya_bahan,        # ← sebelumnya biaya_tindakan
+        biaya_tindakan=data.biaya_tindakan,
+        biaya_bahan=data.biaya_bahan,
         biaya_obat=data.biaya_obat,
+        total_biaya=total,
     )
 
     db.add(rekam)
@@ -82,9 +86,10 @@ def get_rekam_medis_by_id(id: int, db: Session = Depends(get_db)):
         "dokter_id": rekam.dokter_id,
         "diagnosa": rekam.diagnosa,
         "tindakan": rekam.tindakan,
-        "biaya_tindakan": rekam.biaya_tindakan,  # ← sebelumnya biaya_dokter
-        "biaya_bahan": rekam.biaya_bahan,        # ← sebelumnya biaya_tindakan
+        "biaya_tindakan": rekam.biaya_tindakan,
+        "biaya_bahan": rekam.biaya_bahan,
         "biaya_obat": rekam.biaya_obat,
+        "total_biaya": rekam.total_biaya,
     }
 
 # PUT
@@ -99,9 +104,14 @@ def update_rekam_medis(id: int, data: dict, db: Session = Depends(get_db)):
     rekam.diagnosa = data.get("diagnosa", rekam.diagnosa)
     rekam.tindakan = data.get("tindakan", rekam.tindakan)
 
-    rekam.biaya_tindakan = data.get("biaya_tindakan", rekam.biaya_tindakan)  # ← biaya_dokter → biaya_tindakan
-    rekam.biaya_bahan = data.get("biaya_bahan", rekam.biaya_bahan)            # ← biaya_tindakan → biaya_bahan
+    rekam.biaya_tindakan = data.get("biaya_tindakan", rekam.biaya_tindakan)
+    rekam.biaya_bahan = data.get("biaya_bahan", rekam.biaya_bahan)
     rekam.biaya_obat = data.get("biaya_obat", rekam.biaya_obat)
+
+    # hitung ulang total biaya
+    rekam.total_biaya = (
+        rekam.biaya_tindakan + rekam.biaya_bahan + rekam.biaya_obat
+    )
 
     if "pasien_id" in data:
         if not db.query(Pasien).filter_by(id=data["pasien_id"]).first():

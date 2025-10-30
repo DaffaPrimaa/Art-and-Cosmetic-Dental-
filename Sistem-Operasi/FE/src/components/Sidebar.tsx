@@ -1,47 +1,60 @@
 import { NavLink } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  Stethoscope,
+  Package,
+  FileText,
+} from "lucide-react"; // 🆕 Import ikon lucide-react
 
 const menuItems = [
-  { label: "Dashboard", path: "/" },
-  { label: "Data Pasien", path: "/pasien" },
-  { label: "Rekam Medis", path: "/rekam-medis" },
-  { label: "Data Dokter", path: "/dokter" },
-  { label: "Data Alat", path: "/alat" },
-  { label: "Data Laporan", path: "/laporan" },
+  { label: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> },
+  { label: "Data Pasien", path: "/pasien", icon: <Users size={18} /> },
+  { label: "Rekam Medis", path: "/rekam-medis", icon: <ClipboardList size={18} /> },
+  { label: "Data Dokter", path: "/dokter", icon: <Stethoscope size={18} /> },
+  { label: "Data Alat", path: "/alat", icon: <Package size={18} /> },
+  { label: "Data Laporan", path: "/laporan", icon: <FileText size={18} /> },
 ];
 
 export default function Sidebar() {
   return (
     <div
-      className="w-64 text-white flex flex-col"
+      className="w-64 text-white flex flex-col shadow-xl"
       style={{ backgroundColor: "#0B2C5F" }}
     >
-      <div className="p-4 border-b border-white/20">
-        <h1 className="text-xl font-semibold leading-tight tracking-wide text-white">
-          <span className="block text-lg">🦷</span>
-          <span className="text-lg font-bold">Art</span>{" "}
-          <span className="text-base font-light">and</span>{" "}
-          <span className="text-lg font-bold">Cosmetic</span>{" "}
-          <span className="text-lg">Dental Clinic</span>
+      {/* Header */}
+      <div className="p-5 border-b border-white/20 text-center">
+        <h1 className="text-xl font-bold leading-tight">
+          <span className="text-2xl mr-1"></span> Art & Cosmetic
+          <div className="text-sm font-light">Dental Clinic</div>
         </h1>
       </div>
 
-      <nav className="flex-1 p-2 space-y-2">
+      {/* Menu Items */}
+      <nav className="flex-1 p-3 space-y-1">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `block px-4 py-2 rounded transition ${
+              `flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? "bg-white text-[#0B2C5F] font-semibold"
-                  : "hover:bg-[#1A3C6E] text-white"
+                  ? "bg-white text-[#0B2C5F] font-semibold shadow-md"
+                  : "text-white hover:bg-[#1A3C6E] hover:translate-x-1"
               }`
             }
           >
-            📁 {item.label}
+            {item.icon}
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
+
+      {/* Footer kecil (opsional) */}
+      <div className="p-3 text-center text-xs text-gray-300 border-t border-white/20">
+        © {new Date().getFullYear()} Art & Cosmetic
+      </div>
     </div>
   );
 }
