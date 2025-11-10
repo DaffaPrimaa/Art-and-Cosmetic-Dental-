@@ -15,6 +15,7 @@ import TambahRekamMedis from "./pages/TambahRekamMedis";
 import TambahAlat from "./pages/TambahAlat";
 import RekamMedis from "./pages/RekamMedis";
 import DetailRekamMedis from "./pages/DetailRekamMedis";
+import DataLaporanAlat from "./pages/DataLaporanAlat";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/rekam-medis" element={<RekamMedis />} />
           <Route path="/alat" element={<DataAlat />} />
           <Route path="/laporan" element={<DataLaporan />} />
+          <Route path="/laporan-alat" element={<DataLaporanAlat />} />
           <Route path="/pasien/edit/:id" element={<EditPasien />} />
           <Route path="/dokter/edit/:id" element={<EditDokter />} />
           <Route path="/rekam-medis/edit/:id" element={<EditRekamMedis />} />
@@ -42,7 +44,10 @@ function App() {
           <Route path="/dokter/tambah" element={<TambahDokter />} />
           <Route path="/rekam-medis/tambah" element={<TambahRekamMedis />} />
           <Route path="/alat/tambah" element={<TambahAlat />} />
-          <Route path="/rekam-medis/detail/:id" element={<DetailRekamMedis />} />
+          <Route
+            path="/rekam-medis/detail/:id"
+            element={<DetailRekamMedis />}
+          />
           <Route path="*" element={<div>Halaman tidak ditemukan</div>} />
         </Routes>
       </div>

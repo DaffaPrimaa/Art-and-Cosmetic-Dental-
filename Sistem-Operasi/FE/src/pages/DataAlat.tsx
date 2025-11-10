@@ -9,6 +9,7 @@ export interface Alat {
   jumlah: number;
   harga: number;
   keterangan: string;
+  tanggal: string | null; // <-- Ini sudah ada dari sebelumnya
 }
 
 export default function DataAlat() {
@@ -18,6 +19,7 @@ export default function DataAlat() {
   const [searchTerm, setSearchTerm] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMonth, setSelectedMonth] = useState(""); // <-- 1. DITAMBAHKAN
 
   // Ambil data alat dari backend
   const fetchAlat = async () => {
@@ -40,6 +42,7 @@ export default function DataAlat() {
 
   // Hapus alat dari backend
   const handleDelete = async (id: number) => {
+    // ... (Logika handleDelete Anda tidak berubah)
     const result = await Swal.fire({
       title: "Yakin ingin menghapus?",
       text: "Data ini akan dihapus secara permanen!",
@@ -72,12 +75,17 @@ export default function DataAlat() {
     }
   };
 
-  // Filter dan pagination
-  const filteredAlat = alat.filter((a) =>
-    Object.values(a).some((v) =>
+  // 3. LOGIKA FILTER DIPERBARUI
+  const filteredAlat = alat.filter((a) => {
+    const matchesSearch = Object.values(a).some((v) =>
       String(v).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+    );
+    // Cek null/undefined untuk tanggal sebelum 'startsWith'
+    const matchesMonth = selectedMonth
+      ? a.tanggal && a.tanggal.startsWith(selectedMonth)
+      : true;
+    return matchesSearch && matchesMonth;
+  });
 
   const indexOfLast = currentPage * entriesPerPage;
   const indexOfFirst = indexOfLast - entriesPerPage;
@@ -86,7 +94,7 @@ export default function DataAlat() {
 
   return (
     <div className="mt-6">
-      {/* Header */}
+      {/* Header (Tidak berubah) */}
       <div className="flex justify-between items-center mb-5">
         <h2 className="text-2xl font-semibold text-[#0B2C5F] flex items-center gap-2">
           💊 Data Alat / Obat
@@ -99,48 +107,61 @@ export default function DataAlat() {
         </button>
       </div>
 
-      {/* Kontainer utama */}
+      {/* Kontainer utama (Styling dari DataAlat) */}
       <div className="bg-white shadow-lg rounded-xl p-5 border border-gray-100">
-        {/* Filter Section */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
-          <div className="flex items-center gap-2 text-sm">
-            <span>Tampilkan</span>
+        
+        {/* 2. BLOK FILTER & SEARCH DIGANTI (Layout dari RekamMedis) */}
+        <div className="flex flex-wrap justify-between items-center mb-5 gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-700">Show</span>
             <select
+              className="border rounded-lg px-2 py-1 focus:ring-2 focus:ring-[#0B2C5F]"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="border rounded-md px-2 py-1 focus:ring-[#0B2C5F] focus:border-[#0B2C5F]"
             >
-              {[5, 10, 25, 50].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
             </select>
-            <span>data</span>
+            <span className="text-gray-700">entries</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <label htmlFor="search" className="font-medium">
-              Cari:
+          <div className="flex items-center gap-2">
+            <label htmlFor="search" className="font-medium text-gray-700">
+              Search:
             </label>
             <input
-              id="search"
               type="text"
-              placeholder="Ketik nama / keterangan..."
+              id="search"
+              placeholder="Ketik nama / keterangan..." // Placeholder diubah
+              className="border rounded-lg px-3 py-1 focus:ring-2 focus:ring-[#0B2C5F]"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded-md px-3 py-1 focus:ring-[#0B2C5F] focus:border-[#0B2C5F]"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <label className="font-semibold">Bulan:</label>
+            <input
+              type="month"
+              className="border px-2 py-1 rounded"
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
         </div>
 
-        {/* Tabel Data */}
+        {/* Tabel Data (Tidak berubah) */}
         {loading ? (
           <p className="text-center text-gray-500 py-6">⏳ Memuat data...</p>
         ) : (
@@ -149,6 +170,7 @@ export default function DataAlat() {
               <thead className="bg-[#0B2C5F] text-white text-left">
                 <tr>
                   <th className="py-3 px-4 font-medium">No</th>
+                  <th className="py-3 px-4 font-medium">Tanggal</th>
                   <th className="py-3 px-4 font-medium">Nama Alat / Obat</th>
                   <th className="py-3 px-4 font-medium">Jumlah</th>
                   <th className="py-3 px-4 font-medium">Harga</th>
@@ -159,7 +181,7 @@ export default function DataAlat() {
               <tbody>
                 {currentEntries.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-6 text-gray-500">
+                    <td colSpan={7} className="text-center py-6 text-gray-500">
                       Tidak ada data alat / obat
                     </td>
                   </tr>
@@ -170,6 +192,11 @@ export default function DataAlat() {
                       className="border-b border-gray-100 hover:bg-gray-50 transition"
                     >
                       <td className="py-3 px-4">{indexOfFirst + i + 1}</td>
+                      <td className="py-3 px-4">
+                        {a.tanggal
+                          ? new Date(a.tanggal).toLocaleDateString("id-ID")
+                          : "-"}
+                      </td>
                       <td className="py-3 px-4 font-medium">{a.nama}</td>
                       <td className="py-3 px-4">{a.jumlah}</td>
                       <td className="py-3 px-4">
@@ -202,7 +229,7 @@ export default function DataAlat() {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Pagination (Tidak berubah) */}
         <div className="flex flex-col md:flex-row justify-between items-center mt-6 text-sm gap-3">
           <div className="text-gray-600">
             Menampilkan {indexOfFirst + 1} -{" "}
