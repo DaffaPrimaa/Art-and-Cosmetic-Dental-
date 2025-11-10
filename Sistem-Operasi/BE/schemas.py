@@ -1,6 +1,6 @@
 # schemas.py
 from pydantic import BaseModel, EmailStr
-from datetime import date
+from datetime import date, datetime
 
 
 # ==== PASIEN ====
@@ -71,6 +71,7 @@ class AlatBase(BaseModel):
     jumlah: int
     harga: int
     keterangan: str
+    tanggal: date | None = None
 
 class AlatCreate(AlatBase):
     pass
@@ -80,6 +81,19 @@ class AlatUpdate(AlatBase):
 
 class AlatOut(AlatBase):
     id: int
+
+    class Config:
+        from_attributes = True
+
+class AlatLogOut(BaseModel):
+    id: int
+    tanggal: datetime
+    nama_alat: str
+    status: str
+    jumlah: int
+    harga_satuan: int
+    total_nilai: int
+    keterangan: str | None = None
 
     class Config:
         from_attributes = True

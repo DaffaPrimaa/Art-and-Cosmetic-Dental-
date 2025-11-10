@@ -6,6 +6,7 @@ export interface Alat {
   jumlah: string;
   harga: string;
   keterangan: string;
+  tanggal: string; // <-- 1. DITAMBAHKAN
 }
 
 export default function TambahAlat() {
@@ -16,6 +17,7 @@ export default function TambahAlat() {
     jumlah: "",
     harga: "",
     keterangan: "",
+    tanggal: new Date().toISOString().split("T")[0], // <-- 2. DITAMBAHKAN (default hari ini)
   });
 
   const [showNotif, setShowNotif] = useState(false);
@@ -44,6 +46,7 @@ export default function TambahAlat() {
         jumlah: onlyNumbers,
       }));
     } else {
+      // Input 'tanggal' akan masuk ke sini dan ditangani secara otomatis
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -58,6 +61,7 @@ export default function TambahAlat() {
       ...formData,
       jumlah: parseInt(formData.jumlah || "0"),
       harga: parseInt(formData.harga.replace(/\./g, "") || "0"),
+      tanggal: formData.tanggal || null, // <-- 4. DIUBAH (kirim null jika kosong)
     };
 
     try {
@@ -87,6 +91,7 @@ export default function TambahAlat() {
     <div className="bg-white p-6 rounded shadow-md mb-6 mt-6">
       <h2 className="text-2xl font-semibold mb-4">➕ Tambah Data Alat</h2>
 
+      {/* ... (Notifikasi tidak berubah) ... */}
       {showNotif && (
         <div className="flex items-center gap-2 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded mb-4 shadow-md">
           <svg
@@ -107,6 +112,20 @@ export default function TambahAlat() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* <-- 3. BLOK INPUT TANGGAL DITAMBAHKAN DI SINI --> */}
+        <div>
+          <label className="block font-medium">Tanggal</label>
+          <input
+            type="date"
+            name="tanggal"
+            value={formData.tanggal}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+            // Kita tidak 'required' di sini agar cocok dengan
+            // skema backend (date | None = None)
+          />
+        </div>
+
         <div>
           <label className="block font-medium">Nama Obat</label>
           <input

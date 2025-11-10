@@ -1,4 +1,3 @@
-# BE/main.py
 from fastapi import FastAPI
 from database import Base, engine
 import models
@@ -9,9 +8,11 @@ from routers.dokter import router as dokter_router
 from routers.pasien import router as pasien_router
 from routers.rekam_medis import router as rekam_medis_router
 from routers.alat import router as alat_router
+from routers.laporan_alat import router as laporan_alat_router
+
 
 # Buat semua tabel dari model
-Base.metadata.create_all(bind=engine)   
+Base.metadata.create_all(bind=engine)  
 
 app = FastAPI()
 
@@ -21,9 +22,14 @@ app.include_router(dokter_router, prefix="/dokter", tags=["Dokter"])
 app.include_router(rekam_medis_router, prefix="/rekam-medis", tags=["Rekam Medis"])
 app.include_router(alat_router, prefix="/alat", tags=["Alat"])
 
+# 2. TAMBAHKAN REGISTRASI ROUTER BARU ANDA
+app.include_router(laporan_alat_router, prefix="/laporan-alat", tags=["Laporan Alat"])
+
+
 @app.get("/")
 def home():
     return {"message": "API Klinik Aktif"}
+
 # Tambahkan ini agar bisa fetch dari frontend React
 app.add_middleware(
     CORSMiddleware,
@@ -34,4 +40,3 @@ app.add_middleware(
 )
 
 # Include router
-

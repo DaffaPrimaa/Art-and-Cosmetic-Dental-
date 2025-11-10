@@ -14,7 +14,8 @@ const menuItems = [
   { label: "Rekam Medis", path: "/rekam-medis", icon: <ClipboardList size={18} /> },
   { label: "Data Dokter", path: "/dokter", icon: <Stethoscope size={18} /> },
   { label: "Data Alat", path: "/alat", icon: <Package size={18} /> },
-  { label: "Data Laporan", path: "/laporan", icon: <FileText size={18} /> },
+  { label: "Laporan Pengunjung", path: "/laporan", icon: <FileText size={18} /> },
+  { label: "Laporan Alat/Bahan", path: "/laporan-alat", icon: <FileText size={18} /> },
 ];
 
 export default function Sidebar() {
