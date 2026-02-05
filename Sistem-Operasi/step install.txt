@@ -1,0 +1,84 @@
+============================================================
+PANDUAN INSTALASI APLIKASI KLINIK (FRONTEND + BACKEND + BOT)
+============================================================
+
+PRASYARAT (WAJIB INSTALL DULU DI LAPTOP BARU):
+1. Node.js (untuk Frontend) -> Download: https://nodejs.org/
+2. Python (untuk Backend & Bot) -> Download: https://www.python.org/ (Centang "Add Python to PATH")
+3. Git (untuk Clone Repo) -> Download: https://git-scm.com/
+4. Driver Printer POS-58 (untuk cetak struk)
+
+------------------------------------------------------------
+LANGKAH 0: DOWNLOAD PROJECT
+------------------------------------------------------------
+1. Buka Terminal / CMD.
+2. Masuk ke folder tujuan, lalu clone repository:
+   git clone <LINK_GITHUB_KAMU_DISINI>
+3. Masuk ke folder project utama:
+   cd Sistem-Operasi
+
+------------------------------------------------------------
+LANGKAH 1: MENJALANKAN BACKEND (Folder BE)
+------------------------------------------------------------
+*Buka Terminal BARU, arahkan ke folder: Sistem-Operasi/BE*
+
+1. Bikin lingkungan virtual (biar library tidak bentrok):
+   python -m venv venv
+
+2. Aktifkan lingkungan virtual:
+   venv\Scripts\activate
+   (Tanda berhasil: muncul tulisan "(venv)" di kiri baris terminal)
+
+3. Install semua library yang dibutuhkan:
+   pip install -r requirements.txt
+
+4. CEK DATABASE (PENTING!):
+   Pastikan file "app.db" ada di dalam folder BE.
+   -> Jika TIDAK ADA (karena tidak ikut ter-upload ke GitHub), copy file "app.db" dari laptop lama dan paste ke folder BE ini.
+
+5. Jalankan Backend:
+   uvicorn main:app --reload
+
+(Jangan tutup terminal ini, biarkan berjalan)
+
+------------------------------------------------------------
+LANGKAH 2: MENJALANKAN BOT (Folder Bot)
+------------------------------------------------------------
+*Buka Terminal BARU lagi, arahkan ke folder: Sistem-Operasi/Bot*
+
+1. Bikin lingkungan virtual:
+   python -m venv venv
+
+2. Aktifkan lingkungan virtual:
+   venv\Scripts\activate
+
+3. Install library bot:
+   pip install -r requirements.txt
+
+4. CEK FILE RAHASIA (PENTING!):
+   Pastikan file ".env" (berisi token) ada di dalam folder Bot.
+   -> Jika TIDAK ADA, copy file ".env" dari laptop lama ke sini.
+
+5. Jalankan Bot:
+   python bot.py
+
+(Jangan tutup terminal ini, biarkan berjalan)
+
+------------------------------------------------------------
+LANGKAH 3: MENJALANKAN FRONTEND (Folder FE)
+------------------------------------------------------------
+*Buka Terminal BARU lagi, arahkan ke folder: Sistem-Operasi/FE*
+
+1. Download semua bahan (node_modules):
+   npm install
+
+2. Jalankan Website:
+   npm run dev
+
+3. Buka browser (Chrome/Edge) dan akses link yang muncul (biasanya http://localhost:5173).
+
+============================================================
+CATATAN TAMBAHAN:
+- Pastikan Driver Printer POS-58 sudah terinstall dan Port USB sudah disetting (USB001 dll) agar fitur cetak struk berfungsi.
+- Jika Backend error "Database not found", cek Langkah 1 poin 4.
+============================================================
